@@ -1,0 +1,20 @@
+{
+  "name": "ielts-mate-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "check": "node scripts-check.mjs",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^9.1.2",
+    "bcryptjs": "^3.0.2",
+    "jose": "^6.0.8"
+  },
+  "devDependencies": {
+    "netlify-cli": "^23.5.0"
+  },
+  "engines": {"node": ">=20"}
+}

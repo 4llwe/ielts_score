@@ -1,0 +1,22 @@
+{
+  "programs": [
+    {"id":"ielts-intensive","title":"IELTS Intensive","level":"Intermediate–Advanced","duration":"12 minggu","mode":"Hybrid","price":2450000,"featured":true},
+    {"id":"toefl-prep","title":"TOEFL Preparation","level":"Pre-intermediate–Advanced","duration":"10 minggu","mode":"Offline","price":1950000},
+    {"id":"english-nurse","title":"English for Nurse","level":"Beginner–Intermediate","duration":"8 minggu","mode":"Online","price":1450000},
+    {"id":"private-class","title":"Private Coaching","level":"Semua level","duration":"Fleksibel","mode":"1-on-1","price":2750000}
+  ],
+  "tests": [
+    {"id":"placement","title":"Placement Test","minutes":15,"questions":15,"price":0},
+    {"id":"toefl-prediction","title":"TOEFL Prediction","minutes":120,"questions":140,"price":175000},
+    {"id":"ielts-simulation","title":"IELTS Simulation","minutes":165,"questions":80,"price":250000}
+  ],
+  "menus": [
+    {"id":"home","label":"Home","href":"#/home","order":1,"active":true},
+    {"id":"programs","label":"Program","href":"#/programs","order":2,"active":true},
+    {"id":"tests","label":"Tes Online","href":"#/tests","order":3,"active":true},
+    {"id":"pricing","label":"Paket & Harga","href":"#/pricing","order":4,"active":true},
+    {"id":"resources","label":"Sumber Belajar","href":"#/resources","order":5,"active":true},
+    {"id":"about","label":"Tentang","href":"#/about","order":6,"active":true},
+    {"id":"contact","label":"Kontak","href":"#/contact","order":7,"active":true}
+  ]
+}
