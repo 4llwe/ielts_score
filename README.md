@@ -8,7 +8,7 @@ MVP full-stack siap deploy untuk mengubah landing page IELTS_MATE menjadi platfo
 - Program, tes, paket & harga, sumber belajar, tentang, kontak, registrasi, dan halaman legal
 - Dashboard demo untuk Siswa, Instructor, Examiner, dan Super Admin
 - Navigation Manager: tambah, edit, urutkan, publish/draft, dan hapus menu
-- Demo test engine dan penyimpanan jawaban lokal
+- Demo test engine dengan pemutar audio Listening, transkrip latihan, dan penyimpanan jawaban lokal
 - Form registrasi/kontak yang berfungsi dalam mode demo
 - Netlify Function API dengan JWT, role guard, audit log, dan Netlify Blobs
 - Security headers, CSP, mobile navigation, focus state, reduced motion
@@ -31,6 +31,7 @@ Untuk produksi:
 6. Tambahkan database relasional (PostgreSQL/Supabase) untuk users, courses, tests, attempts, payments, dan permissions. Netlify Blobs pada starter ditujukan untuk CMS ringan, bukan seluruh sistem akademik/transaksi.
 7. Ganti seluruh materi/soal demo dengan materi berlisensi.
 8. Tinjau halaman legal oleh penasihat hukum.
+9. Ganti `assets/audio/listening-demo.mp3` dengan rekaman berlisensi; simpan metadata audio pada question bank untuk setiap Listening section.
 
 ## Menjalankan lokal
 

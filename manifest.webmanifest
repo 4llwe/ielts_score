@@ -1,0 +1,13 @@
+{
+  "name": "IELTS_MATE Learning Platform",
+  "short_name": "IELTS_MATE",
+  "description": "Kursus, latihan, dan simulasi bahasa Inggris berbasis progres.",
+  "start_url": "/#/home",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b6156",
+  "icons": [
+    {"src":"/assets/icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"/assets/icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}
