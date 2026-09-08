@@ -19,7 +19,110 @@ function home(){return `<section class="hero"><div class="shell hero-grid"><div>
 function programs(){const cats=['Semua','IELTS','TOEFL','Tes','General English','Academic','Children','Professional','Mentoring','Layanan','Private'];return pageHero('Program','Program belajar dan layanan bahasa','Pilih program berdasarkan target, format belajar, dan anggaran Anda.')+`<section class="section"><div class="shell"><div class="filters program-filters">${cats.map((c,i)=>`<button class="filter ${i===0?'active':''}" data-program-filter="${esc(c)}">${esc(c)}</button>`).join('')}</div>${programCards()}</div></section>`}
 function tests(){return pageHero('Tes Online','Latihan preparation yang terukur','Kerjakan tes, simpan jawaban otomatis, dan pantau hasil dalam dashboard.')+`<section class="section"><div class="shell"><div class="cards">${data.tests.map(t=>`<article class="card"><span class="tag">${t.price?'PREMIUM':'GRATIS'}</span><h3>${esc(t.title)}</h3><p>${t.minutes} menit · ${t.questions} soal · autosave · laporan hasil</p><div class="card-meta"><b>${t.price?money(t.price):'Gratis'}</b><a href="#/test/${t.id}">Mulai →</a></div></article>`).join('')}</div><p class="notice" style="margin-top:24px">Produk merupakan latihan dan diagnostik internal untuk pembelajaran, bukan tes IELTS atau TOEFL resmi.</p></div></section>`}
 function pricing(){const fixed=data.programs.filter(p=>p.price!=null);return pageHero('Paket & Harga','Harga program yang transparan','Harga promo berdasarkan materi yang Anda berikan. Konfirmasikan periode promo dan ketersediaan sebelum pembayaran.')+`<section class="section"><div class="shell"><div class="price-summary"><div><span>SpeakUp Academy</span><b>${money(175000)}</b><small>per level</small></div><div><span>Private IELTS</span><b>${money(150000)}</b><small>per pertemuan</small></div><div><span>Kelas persiapan</span><b>${money(1375000)}</b><small>mulai per program</small></div></div><div class="cards pricing-grid">${fixed.map(p=>`<article class="card pricing-card"><div class="card-top"><span class="tag">${esc(p.category)}</span>${p.oldPrice?'<span class="promo-badge">PROMO</span>':''}</div><h3>${esc(p.title)}</h3>${priceBlock(p)}<p>${esc(p.duration)} · ${esc(p.meetings||'')}</p><ul class="feature-list">${(p.features||[]).map(f=>`<li>${esc(f)}</li>`).join('')}</ul><button class="btn primary wide" data-buy="${esc(p.id)}" data-name="${esc(p.title)}" data-amount="${p.price}">Daftar sekarang</button></article>`).join('')}</div><div class="notice price-note"><b>Catatan harga:</b> harga dicatat dari materi promosi yang Anda berikan. Harga dapat berubah sesuai periode promo, format kelas, level, dan ketersediaan. Program tanpa angka biaya ditampilkan sebagai “Konsultasikan biaya” agar sistem tidak mengarang harga.</div></div></section>`}
-function resources(){return pageHero('Sumber Belajar','Belajar lebih strategis','Panduan singkat dari mentor untuk meningkatkan setiap skill.')+`<section class="section"><div class="shell"><div class="cards"><article class="card"><span class="tag">IELTS</span><h3>Strategi menuju band 7.0</h3><p>Prioritaskan kelemahan terbesar dan ukur progres setiap dua minggu.</p><a href="#/resources">Baca artikel →</a></article><article class="card"><span class="tag">TOEFL</span><h3>Pola Structure yang sering diuji</h3><p>Kenali subject–verb agreement, clauses, dan parallel structure.</p><a href="#/resources">Baca artikel →</a></article><article class="card"><span class="tag">PROFESSIONAL</span><h3>English for Nurse</h3><p>Komunikasi klinis, handover, informed consent, dan dokumentasi.</p><a href="#/resources">Baca artikel →</a></article></div></div></section>`}
+const resourceArticles={
+  'ielts-band-7':{
+    category:'IELTS',
+    title:'Strategi Menuju Band 7.0',
+    summary:'Prioritaskan kelemahan terbesar dan ukur progres secara berkala.',
+    sections:[
+      ['Kenali kemampuan awal','Lakukan tes diagnostik untuk mengetahui kemampuan Listening, Reading, Writing, dan Speaking. Fokuskan latihan pada keterampilan dengan nilai paling rendah.'],
+      ['Gunakan target terukur','Tetapkan target mingguan, misalnya menyelesaikan dua latihan Reading dan satu latihan Writing setiap minggu.'],
+      ['Evaluasi secara berkala','Lakukan simulasi setiap dua minggu. Bandingkan hasilnya dan catat kesalahan yang sering berulang.'],
+      ['Dapatkan umpan balik','Writing dan Speaking sebaiknya ditinjau oleh tutor agar peserta mengetahui kekuatan dan bagian yang perlu ditingkatkan.']
+    ]
+  },
+
+  'toefl-structure':{
+    category:'TOEFL',
+    title:'Pola Structure yang Sering Diuji',
+    summary:'Kenali pola tata bahasa utama dalam latihan TOEFL.',
+    sections:[
+      ['Subject dan verb','Pastikan setiap kalimat memiliki subjek dan kata kerja utama yang sesuai.'],
+      ['Subject–verb agreement','Subjek tunggal menggunakan kata kerja tunggal, sedangkan subjek jamak menggunakan bentuk jamak.'],
+      ['Clauses','Pelajari perbedaan independent clause dan dependent clause serta penggunaan kata penghubung.'],
+      ['Parallel structure','Unsur-unsur dalam daftar atau perbandingan harus menggunakan bentuk gramatikal yang sejajar.']
+    ]
+  },
+
+  'english-for-nurse':{
+    category:'PROFESSIONAL',
+    title:'English for Nurse',
+    summary:'Komunikasi bahasa Inggris untuk situasi pelayanan kesehatan.',
+    sections:[
+      ['Clinical communication','Gunakan kalimat yang jelas dan sederhana ketika menanyakan keluhan, riwayat kesehatan, dan kebutuhan pasien.'],
+      ['Handover','Sampaikan kondisi pasien secara sistematis menggunakan struktur seperti SBAR.'],
+      ['Informed consent','Pastikan pasien memahami tujuan, manfaat, risiko, dan alternatif tindakan sebelum memberikan persetujuan.'],
+      ['Documentation','Gunakan istilah klinis yang tepat, objektif, singkat, dan tidak ambigu ketika menulis dokumentasi.']
+    ]
+  }
+};
+
+function articlePage(id){
+  const article=resourceArticles[id];
+
+  if(!article){
+    return pageHero(
+      'Sumber Belajar',
+      'Artikel tidak ditemukan',
+      'Artikel yang Anda cari belum tersedia.'
+    );
+  }
+
+  return pageHero(
+    article.category,
+    article.title,
+    article.summary
+  )+`
+    <section class="section">
+      <div class="shell" style="max-width:900px">
+        <article class="panel legal">
+          ${article.sections.map(section=>`
+            <h2>${esc(section[0])}</h2>
+            <p>${esc(section[1])}</p>
+          `).join('')}
+          <p>
+            <a class="btn" href="#/resources">← Kembali ke Sumber Belajar</a>
+          </p>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function resources(){
+  return pageHero(
+    'Sumber Belajar',
+    'Belajar lebih strategis',
+    'Panduan singkat dari mentor untuk meningkatkan setiap skill.'
+  )+`
+    <section class="section">
+      <div class="shell">
+        <div class="cards">
+          <article class="card">
+            <span class="tag">IELTS</span>
+            <h3>Strategi menuju band 7.0</h3>
+            <p>Prioritaskan kelemahan terbesar dan ukur progres setiap dua minggu.</p>
+            <a href="#/article/ielts-band-7">Baca artikel →</a>
+          </article>
+
+          <article class="card">
+            <span class="tag">TOEFL</span>
+            <h3>Pola Structure yang sering diuji</h3>
+            <p>Kenali subject–verb agreement, clauses, dan parallel structure.</p>
+            <a href="#/article/toefl-structure">Baca artikel →</a>
+          </article>
+
+          <article class="card">
+            <span class="tag">PROFESSIONAL</span>
+            <h3>English for Nurse</h3>
+            <p>Komunikasi klinis, handover, informed consent, dan dokumentasi.</p>
+            <a href="#/article/english-for-nurse">Baca artikel →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  `;
+}
 function about(){const p=getInstitution();return pageHero('Profil Lembaga','Belajar terarah untuk peluang yang lebih luas','Mengenal identitas, visi, misi, metode pembelajaran, dan kepemimpinan IELTS_MATE.')+`<section class="section institution-intro"><div class="shell profile-lead-grid"><div><p class="eyebrow">PROFIL LEMBAGA</p><h2>${esc(p.name)}</h2><p class="lead">${esc(p.profileStatement)}</p><div class="institution-facts"><div><small>Kedudukan</small><b>${esc(p.legalPosition)}</b></div><div><small>Lokasi</small><b>Lombok Barat, Nusa Tenggara Barat</b></div><div><small>Model layanan</small><b>Online, on-site, kelas, dan private</b></div></div></div><aside class="vision-card"><p class="eyebrow">VISI</p><h3>${esc(p.vision)}</h3></aside></div></section><section class="section soft"><div class="shell"><div class="section-head"><div><p class="eyebrow">ARAH LEMBAGA</p><h2>Misi dan nilai utama</h2></div><p>Setiap program dirancang agar peserta memahami target, proses, progres, dan batas layanan.</p></div><div class="profile-two"><ol class="mission-list">${p.mission.map((x,i)=>`<li><span>${String(i+1).padStart(2,'0')}</span><p>${esc(x)}</p></li>`).join('')}</ol><div><h3>Nilai IELTS_MATE</h3><div class="value-grid">${p.values.map(x=>`<div><i>✓</i><b>${esc(x)}</b></div>`).join('')}</div><div class="notice profile-notice"><b>Posisi layanan:</b> ${esc(p.disclaimer)}</div></div></div></div></section><section class="section"><div class="shell"><div class="section-head"><div><p class="eyebrow">LEARNING JOURNEY</p><h2>Metode pendampingan terintegrasi</h2></div><p>Dari pemetaan kebutuhan sampai pengakuan penyelesaian program.</p></div><div class="journey-row">${p.learningModel.map((x,i)=>`<div><span>${i+1}</span><b>${esc(x)}</b></div>`).join('')}</div></div></section><section class="section director-section"><div class="shell founder-feature"><div class="founder-photo-wrap"><img src="/assets/images/director-sumawartini.webp" alt="${esc(p.founderName)}, Direktur IELTS_MATE" class="founder-photo"></div><div class="founder-copy"><p class="eyebrow">${esc(p.founderTitle).toUpperCase()}</p><h2>${esc(p.founderName)}</h2><p class="lead">Memimpin IELTS_MATE dalam menyediakan program persiapan bahasa Inggris yang terstruktur, relevan, transparan, dan berorientasi pada perkembangan peserta.</p><div class="founder-contact"><a href="https://wa.me/6287864053222" target="_blank" rel="noopener">WhatsApp · ${esc(p.phone)}</a><a href="mailto:${esc(p.email)}">${esc(p.email)}</a><span>${esc(p.address)}</span></div></div></div></section>`}
 function formPage(kind){const contact=kind==='contact';return pageHero(contact?'Kontak':'Pendaftaran',contact?'Mari diskusikan kebutuhanmu':'Mulai perjalanan belajarmu',contact?'Tim akademik akan merespons dalam satu hari kerja.':'Buat akun dan pilih target awal.')+`<section class="section"><div class="shell" style="max-width:920px">${contact?`<div class="contact-profile"><img src="/assets/images/ielts-mate-logo.webp" alt="Logo IELTS_MATE"><div><p class="eyebrow">PROGRAM DIRECTOR</p><h2>Sumawartini, M.TESOL</h2><p>Perumahan Aghniya Harmony, Terong Tawah, Kec. Labuapi, Kab. Lombok Barat, Nusa Tenggara Barat 83361</p><div class="contact-links"><a href="https://wa.me/6287864053222" target="_blank" rel="noopener">WhatsApp · +62 878-6405-3222</a><a href="mailto:sumawartinitajalli@gmail.com">sumawartinitajalli@gmail.com</a></div></div></div>`:''}<form class="panel form-grid" data-local-form="${kind}"><label>Nama lengkap<input name="name" required></label><label>Email<input type="email" name="email" required></label><label>WhatsApp<input name="phone" required></label><label>${contact?'Topik':'Program'}<select name="topic"><option>IELTS Preparation</option><option>TOEFL Preparation</option><option>English for Nurse</option><option>Private Class</option></select></label><label class="field full">Pesan<textarea name="message" required></textarea></label><label class="field full" style="display:flex;grid-template-columns:auto 1fr;align-items:start"><input style="width:auto" type="checkbox" required><span>Saya menyetujui pemrosesan data sesuai Kebijakan Privasi.</span></label><button class="btn primary" type="submit">${contact?'Kirim pesan':'Buat pendaftaran'}</button></form></div></section>`}
 function registerPage(){return pageHero('Pendaftaran','Buat akun IELTS_MATE','Akun digunakan untuk menyimpan progres, pembayaran, evaluasi, dan sertifikat.')+`<section class="section"><div class="shell" style="max-width:760px"><form id="registerForm" class="panel form-grid"><label>Nama lengkap<input name="full_name" required maxlength="120" autocomplete="name"></label><label>Email<input type="email" name="email" required autocomplete="email"></label><label class="field full">Password<input type="password" name="password" required minlength="10" autocomplete="new-password"><small>Minimal 10 karakter. Gunakan kombinasi unik.</small></label><label class="field full" style="display:flex;grid-template-columns:auto 1fr;align-items:start"><input style="width:auto" type="checkbox" required><span>Saya menyetujui Kebijakan Privasi dan Syarat Layanan.</span></label><button class="btn primary" type="submit">Buat akun</button><p id="registerStatus" class="form-help" role="status"></p></form></div></section>`}
@@ -67,7 +170,7 @@ function certificateDocument(code){const c=findCertificate(code);if(!c)return ve
 function institutionProfilePanel(){const p=getInstitution();return `<div class="panel-title page-title"><div><p class="eyebrow">INSTITUTION CMS</p><h2>Profil Lembaga</h2><p>Kelola narasi yang tampil pada halaman publik. Perubahan produksi memerlukan akun admin.</p></div><a class="btn" href="#/about">Lihat publik</a></div><form id="institutionProfileForm" class="panel institution-form"><label>Nama lembaga<input name="name" value="${esc(p.name)}" required maxlength="120"></label><label>Kedudukan<input name="legalPosition" value="${esc(p.legalPosition)}" required maxlength="180"></label><label class="field full">Narasi profil<textarea name="profileStatement" required maxlength="2000">${esc(p.profileStatement)}</textarea></label><label class="field full">Visi<textarea name="vision" required maxlength="1000">${esc(p.vision)}</textarea></label><label class="field full">Misi — satu poin per baris<textarea name="mission" required>${esc(p.mission.join('\n'))}</textarea></label><label class="field full">Nilai — pisahkan dengan koma<input name="values" value="${esc(p.values.join(', '))}" required></label><label class="field full">Tahap pembelajaran — pisahkan dengan koma<input name="learningModel" value="${esc(p.learningModel.join(', '))}" required></label><label>Nama pimpinan<input name="founderName" value="${esc(p.founderName)}" required></label><label>Jabatan<input name="founderTitle" value="${esc(p.founderTitle)}" required></label><label class="field full">Alamat<textarea name="address" required>${esc(p.address)}</textarea></label><label>WhatsApp<input name="phone" value="${esc(p.phone)}" required></label><label>Email<input name="email" type="email" value="${esc(p.email)}" required></label><label class="field full">Disclaimer<textarea name="disclaimer" required>${esc(p.disclaimer)}</textarea></label><button class="btn primary" type="submit">Simpan dan publikasikan</button><span class="form-help">Versi lokal disimpan otomatis; versi deploy disinkronkan ke Supabase.</span></form>`}
 
 const routes={home,programs,tests,pricing,resources,about,method,verify:verificationPage,certificate:certificateDocument,contact:()=>formPage('contact'),register:registerPage,privacy:()=>legal('privacy'),terms:()=>legal('terms'),refund:()=>legal('refund'),dashboard};
-function render(){const [route,param]=(location.hash.replace(/^#\//,'')||'home').split('/');main.innerHTML=route==='test'?testPage(param):route==='verify'?verificationPage(param):route==='certificate'?certificateDocument(param):(routes[route]||home)();nav();bind();main.focus({preventScroll:true})}
+function render(){const [route,param]=(location.hash.replace(/^#\//,'')||'home').split('/');main.innerHTML=route==='test'?testPage(param):route==='article'?articlePage(param):route==='verify'?verificationPage(param):route==='certificate'?certificateDocument(param):(routes[route]||home)();nav();bind();main.focus({preventScroll:true})}
 function bind(){setupListening();setupPrepTest();bindCertificateActions();qsa('[data-program-filter]').forEach(b=>b.onclick=()=>{qsa('[data-program-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const f=b.dataset.programFilter;qsa('.program-card').forEach(c=>c.hidden=f!=='Semua'&&c.dataset.category!==f)});qs('#registerForm')?.addEventListener('submit',async e=>{e.preventDefault();const status=qs('#registerStatus'),b=Object.fromEntries(new FormData(e.currentTarget));status.textContent='Membuat akun…';try{const x=await apiCall('auth/register',{method:'POST',body:JSON.stringify(b)});status.textContent=x.message||'Akun dibuat. Periksa email Anda.';e.currentTarget.reset()}catch(err){status.textContent=err.message}});qsa('[data-buy]').forEach(b=>b.onclick=async()=>{if(!session?.token){notify('Silakan masuk sebelum membeli.');return qs('#loginDialog').showModal()}b.disabled=true;try{const x=await apiCall('payments/create',{method:'POST',body:JSON.stringify({programSlug:b.dataset.buy})});location.href=x.redirectUrl}catch(err){notify(err.message);b.disabled=false}});qsa('[data-action="login"]').forEach(b=>b.onclick=()=>qs('#loginDialog').showModal());qsa('[data-action="logout"]').forEach(b=>b.onclick=()=>{session=null;sessionStorage.removeItem('im-session');location.hash='#/home';notify('Anda telah keluar')});qsa('[data-local-form]').forEach(f=>f.onsubmit=async e=>{e.preventDefault();const b=Object.fromEntries(new FormData(f));try{if(f.dataset.localForm==='contact')await apiCall('leads',{method:'POST',body:JSON.stringify(b)});else throw new Error('Gunakan dashboard akun untuk menyimpan perubahan.');f.reset();notify('Pesan tersimpan. Tim kami akan menghubungi Anda.')}catch(err){notify(err.message)}});qs('#quizForm')?.addEventListener('submit',e=>{e.preventDefault();const a=new FormData(e.currentTarget).get('q');if(!a)return notify('Pilih satu jawaban.');localStorage.setItem('im-last-answer',a);notify(a==='b'?'Jawaban tersimpan — benar.':'Jawaban tersimpan — lanjutkan latihan.')});qsa('[data-panel]').forEach(b=>b.onclick=()=>{qsa('[data-panel]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const title=b.dataset.panel;qs('#dashContent').innerHTML=dashboardPanel(title,session.role);bindDashboardActions();bindDashboardActions();bindCertificateActions();bindAdmin()});bindAdmin()}
 function bindCertificateActions(){qs('#issueCertificateForm')?.addEventListener('submit',async e=>{e.preventDefault();const b=Object.fromEntries(new FormData(e.currentTarget));const now=new Date(),prefix=b.type.includes('Completion')?'COC':'COP';const number=`IM-${prefix}-${now.getFullYear()}-${crypto.randomUUID().slice(0,8).toUpperCase()}`;const c={...b,number,hours:+b.hours,issuedAt:new Date(b.issuedAt).toISOString(),revokedAt:null};const list=getCertificates();list.unshift(c);localStorage.setItem('im-certificates',JSON.stringify(list));if(session?.token)apiCall('certificates',{method:'POST',body:JSON.stringify(c)}).catch(err=>notify('Sertifikat tersimpan lokal; sinkronisasi gagal.'));notify('Sertifikat pengakuan diterbitkan');qs('#dashContent').innerHTML=certificateAdminPanel();bindCertificateActions()});qsa('[data-revoke-cert]').forEach(b=>b.onclick=()=>{const list=getCertificates(),c=list.find(x=>x.number===b.dataset.revokeCert);if(c)c.revokedAt=new Date().toISOString();localStorage.setItem('im-certificates',JSON.stringify(list));if(session?.token)apiCall('certificates/revoke',{method:'POST',body:JSON.stringify({number:b.dataset.revokeCert})}).catch(()=>notify('Pencabutan tersimpan lokal; sinkronisasi gagal.'));notify('Sertifikat dicabut');qs('#dashContent').innerHTML=certificateAdminPanel();bindCertificateActions()});qs('[data-verify-form]')?.addEventListener('submit',e=>{e.preventDefault();location.hash='#/verify/'+encodeURIComponent(new FormData(e.currentTarget).get('code'))});const remote=qs('#remoteVerification'),code=qs('[data-verify-form] input[name=code]')?.value;if(remote&&code){apiCall('certificates/verify?code='+encodeURIComponent(code)).then(x=>{const c={number:x.certificate_no,name:x.participant_name,type:x.certificate_type,program:x.program_title,hours:x.completion_hours,issuedAt:x.issued_at,revokedAt:x.is_valid?null:new Date().toISOString()};sessionStorage.setItem('im-verified-certificate',JSON.stringify(c));render()}).catch(()=>{remote.className='verification-result invalid';remote.innerHTML='<div class="verify-icon">×</div><div><span class="status draft">Tidak ditemukan</span><h2>Nomor tidak valid</h2><p>Periksa kembali nomor sertifikat atau hubungi administrator IELTS_MATE.</p></div>'})}}
 function bindDashboardActions(){}
