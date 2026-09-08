@@ -1,0 +1,24 @@
+alter table public.programs add column if not exists category text, add column if not exists old_price integer, add column if not exists billing_unit text, add column if not exists meetings text, add column if not exists mode text, add column if not exists features jsonb not null default '[]';
+insert into public.programs(slug,title,category,duration_weeks,mode,price,old_price,billing_unit,meetings,features,status)
+select v.slug,v.title,v.category,null,v.mode,coalesce(v.price,0),v.old_price,v.billing_unit,v.meetings,v.features,'published'::public.content_status from (values
+('ielts-online','IELTS Preparation Online Course','IELTS','12 minggu','Online',1750000,2350000,'per kelas','30 pertemuan × 100 menit','["Tutor lulusan luar negeri", "Jadwal fleksibel", "Konsultasi 24 jam", "Progress report rutin", "Kelas eksklusif dan interaktif"]'::jsonb),
+('ielts-private','IELTS Private Coaching','IELTS','Fleksibel','Private 1-on-1',150000,null,'per pertemuan','Sesuai kebutuhan','["Jadwal fleksibel", "Program personal", "Feedback individual"]'::jsonb),
+('ielts-academic','IELTS Academic Preparation','IELTS','12 minggu','Online & On-site',1750000,2350000,'per kelas','30 pertemuan × 100 menit','["Tutor lulusan luar negeri", "Progress report rutin", "Konsultasi 24 jam", "Bonus mengulang sesuai ketentuan"]'::jsonb),
+('ielts-whv','IELTS for WHV','IELTS','12 minggu','Online & On-site',1975000,2975000,'per kelas','30 pertemuan × 100 menit','["Tutor berpengalaman dan praktisi WHV", "Kelas eksklusif", "Progress report rutin", "Jadwal fleksibel"]'::jsonb),
+('toefl-preparation','TOEFL Preparation Class','TOEFL','12 minggu','Online & On-site',1375000,1975000,'per kelas','30 pertemuan × 100 menit','["Tutor lulusan luar negeri", "Latihan intensif", "Progress report rutin", "Konsultasi 24 jam"]'::jsonb),
+('toefl-ielts-private','TOEFL & IELTS Private','Private','Fleksibel','Private',150000,null,'mulai per pertemuan','Sesuai kebutuhan','["Kurikulum personal", "Jadwal fleksibel", "Feedback tutor"]'::jsonb),
+('speakup-academy','SpeakUp Academy','General English','3 minggu per level','Online Group Class',175000,550000,'per level','10 pertemuan × 90 menit','["Kelas eksklusif dan interaktif", "Progress report dan sertifikat", "Jadwal fleksibel"]'::jsonb),
+('prediction-test','TOEFL & IELTS Prediction Test','Tes','Sesuai jadwal','Online / On-site',null,null,'','1 sesi tes','["Simulasi terukur", "Laporan hasil", "Informasi biaya melalui admin"]'::jsonb),
+('toefl-official-registration','Pendaftaran TOEFL Official Test','Tes','Sesuai penyelenggara','Sesuai penyelenggara',null,null,'','1 sesi tes','["Layanan pendaftaran", "Jadwal dan biaya dikonfirmasi admin", "Tidak menyatakan tes diselenggarakan IELTS_MATE"]'::jsonb),
+('sworn-translator','Sworn Translator','Layanan','Sesuai dokumen','Online',null,null,'','Layanan profesional','["Penawaran berdasarkan jenis dan jumlah dokumen", "Estimasi biaya setelah review"]'::jsonb),
+('general-english','General English','General English','Sesuai level','Online & On-site',null,null,'','Program kelas','["Speaking, grammar, vocabulary", "Progress report"]'::jsonb),
+('academic-writing','Academic Writing','Academic','Fleksibel','Online',null,null,'','Program kelas / private','["Essay structure", "Citation and academic style", "Individual feedback"]'::jsonb),
+('smart-english-children','Smart English for Children','Children','Sesuai level','Online & On-site',null,null,'','Program kelas','["Aktivitas sesuai usia", "Kelas interaktif", "Laporan perkembangan"]'::jsonb),
+('english-specific-purpose','English for Specific Purpose','Professional','Disesuaikan','Online & On-site',null,null,'','Custom program','["Needs analysis", "Materi sesuai profesi", "Corporate/private option"]'::jsonb),
+('scholarship-mentoring','Bimbingan Beasiswa','Mentoring','Fleksibel','Online',null,null,'','Mentoring','["Strategi aplikasi", "Review dokumen", "Persiapan wawancara"]'::jsonb),
+('campus-application','Bimbingan Mendaftar Kampus 13+ Negara','Mentoring','Sesuai proses aplikasi','Online',null,null,'','Pendampingan','["Pemilihan kampus", "Review aplikasi", "Pendampingan proses"]'::jsonb)
+) as v(slug,title,category,duration,mode,price,old_price,billing_unit,meetings,features)
+on conflict(slug) do update set title=excluded.title,category=excluded.category,mode=excluded.mode,price=excluded.price,old_price=excluded.old_price,billing_unit=excluded.billing_unit,meetings=excluded.meetings,features=excluded.features,status='published';
+
+alter table public.programs add column if not exists consultation_required boolean not null default false;
+update public.programs set consultation_required=true where slug in ('prediction-test','toefl-official-registration','sworn-translator','general-english','academic-writing','smart-english-children','english-specific-purpose','scholarship-mentoring','campus-application');

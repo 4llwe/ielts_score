@@ -1,22 +1,414 @@
 {
   "programs": [
-    {"id":"ielts-intensive","title":"IELTS Intensive","level":"Intermediate–Advanced","duration":"12 minggu","mode":"Hybrid","price":2450000,"featured":true},
-    {"id":"toefl-prep","title":"TOEFL Preparation","level":"Pre-intermediate–Advanced","duration":"10 minggu","mode":"Offline","price":1950000},
-    {"id":"english-nurse","title":"English for Nurse","level":"Beginner–Intermediate","duration":"8 minggu","mode":"Online","price":1450000},
-    {"id":"private-class","title":"Private Coaching","level":"Semua level","duration":"Fleksibel","mode":"1-on-1","price":2750000}
+    {
+      "id": "ielts-online",
+      "title": "IELTS Preparation Online Course",
+      "category": "IELTS",
+      "level": "Intermediate–Advanced",
+      "duration": "12 minggu",
+      "meetings": "30 pertemuan × 100 menit",
+      "mode": "Online",
+      "price": 1750000,
+      "oldPrice": 2350000,
+      "billingUnit": "per kelas",
+      "featured": true,
+      "features": [
+        "Tutor lulusan luar negeri",
+        "Jadwal fleksibel",
+        "Konsultasi 24 jam",
+        "Progress report rutin",
+        "Kelas eksklusif dan interaktif"
+      ]
+    },
+    {
+      "id": "ielts-private",
+      "title": "IELTS Private Coaching",
+      "category": "IELTS",
+      "level": "Semua level",
+      "duration": "Fleksibel",
+      "meetings": "Sesuai kebutuhan",
+      "mode": "Private 1-on-1",
+      "price": 150000,
+      "oldPrice": null,
+      "billingUnit": "per pertemuan",
+      "features": [
+        "Jadwal fleksibel",
+        "Program personal",
+        "Feedback individual"
+      ]
+    },
+    {
+      "id": "ielts-academic",
+      "title": "IELTS Academic Preparation",
+      "category": "IELTS",
+      "level": "Intermediate–Advanced",
+      "duration": "12 minggu",
+      "meetings": "30 pertemuan × 100 menit",
+      "mode": "Online & On-site",
+      "price": 1750000,
+      "oldPrice": 2350000,
+      "billingUnit": "per kelas",
+      "featured": true,
+      "features": [
+        "Tutor lulusan luar negeri",
+        "Progress report rutin",
+        "Konsultasi 24 jam",
+        "Bonus mengulang sesuai ketentuan"
+      ]
+    },
+    {
+      "id": "ielts-whv",
+      "title": "IELTS for WHV",
+      "category": "IELTS",
+      "level": "Intermediate–Advanced",
+      "duration": "12 minggu",
+      "meetings": "30 pertemuan × 100 menit",
+      "mode": "Online & On-site",
+      "price": 1975000,
+      "oldPrice": 2975000,
+      "billingUnit": "per kelas",
+      "featured": true,
+      "features": [
+        "Tutor berpengalaman dan praktisi WHV",
+        "Kelas eksklusif",
+        "Progress report rutin",
+        "Jadwal fleksibel"
+      ]
+    },
+    {
+      "id": "toefl-preparation",
+      "title": "TOEFL Preparation Class",
+      "category": "TOEFL",
+      "level": "Pre-intermediate–Advanced",
+      "duration": "12 minggu",
+      "meetings": "30 pertemuan × 100 menit",
+      "mode": "Online & On-site",
+      "price": 1375000,
+      "oldPrice": 1975000,
+      "billingUnit": "per kelas",
+      "featured": true,
+      "features": [
+        "Tutor lulusan luar negeri",
+        "Latihan intensif",
+        "Progress report rutin",
+        "Konsultasi 24 jam"
+      ]
+    },
+    {
+      "id": "toefl-ielts-private",
+      "title": "TOEFL & IELTS Private",
+      "category": "Private",
+      "level": "Semua level",
+      "duration": "Fleksibel",
+      "meetings": "Sesuai kebutuhan",
+      "mode": "Private",
+      "price": 150000,
+      "oldPrice": null,
+      "billingUnit": "mulai per pertemuan",
+      "features": [
+        "Kurikulum personal",
+        "Jadwal fleksibel",
+        "Feedback tutor"
+      ]
+    },
+    {
+      "id": "speakup-academy",
+      "title": "SpeakUp Academy",
+      "category": "General English",
+      "level": "Semua level",
+      "duration": "3 minggu per level",
+      "meetings": "10 pertemuan × 90 menit",
+      "mode": "Online Group Class",
+      "price": 175000,
+      "oldPrice": 550000,
+      "billingUnit": "per level",
+      "featured": true,
+      "features": [
+        "Kelas eksklusif dan interaktif",
+        "Progress report dan sertifikat",
+        "Jadwal fleksibel"
+      ]
+    },
+    {
+      "id": "prediction-test",
+      "title": "TOEFL & IELTS Practice Test",
+      "category": "Tes",
+      "level": "Semua level",
+      "duration": "Sesuai jadwal",
+      "meetings": "1 sesi tes",
+      "mode": "Online / On-site",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Latihan terstruktur",
+        "Laporan hasil internal",
+        "Informasi biaya melalui admin"
+      ]
+    },
+    {
+      "id": "toefl-official-registration",
+      "title": "Pendaftaran TOEFL Official Test",
+      "category": "Tes",
+      "level": "Semua level",
+      "duration": "Sesuai penyelenggara",
+      "meetings": "1 sesi tes",
+      "mode": "Sesuai penyelenggara",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Layanan pendaftaran",
+        "Jadwal dan biaya dikonfirmasi admin",
+        "Tidak menyatakan tes diselenggarakan IELTS_MATE"
+      ]
+    },
+    {
+      "id": "sworn-translator",
+      "title": "Sworn Translator",
+      "category": "Layanan",
+      "level": "Dokumen",
+      "duration": "Sesuai dokumen",
+      "meetings": "Layanan profesional",
+      "mode": "Online",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Penawaran berdasarkan jenis dan jumlah dokumen",
+        "Estimasi biaya setelah review"
+      ]
+    },
+    {
+      "id": "general-english",
+      "title": "General English",
+      "category": "General English",
+      "level": "Beginner–Advanced",
+      "duration": "Sesuai level",
+      "meetings": "Program kelas",
+      "mode": "Online & On-site",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Speaking, grammar, vocabulary",
+        "Progress report"
+      ]
+    },
+    {
+      "id": "academic-writing",
+      "title": "Academic Writing",
+      "category": "Academic",
+      "level": "Intermediate–Advanced",
+      "duration": "Fleksibel",
+      "meetings": "Program kelas / private",
+      "mode": "Online",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Essay structure",
+        "Citation and academic style",
+        "Individual feedback"
+      ]
+    },
+    {
+      "id": "smart-english-children",
+      "title": "Smart English for Children",
+      "category": "Children",
+      "level": "Anak-anak",
+      "duration": "Sesuai level",
+      "meetings": "Program kelas",
+      "mode": "Online & On-site",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Aktivitas sesuai usia",
+        "Kelas interaktif",
+        "Laporan perkembangan"
+      ]
+    },
+    {
+      "id": "english-specific-purpose",
+      "title": "English for Specific Purpose",
+      "category": "Professional",
+      "level": "Disesuaikan",
+      "duration": "Disesuaikan",
+      "meetings": "Custom program",
+      "mode": "Online & On-site",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Needs analysis",
+        "Materi sesuai profesi",
+        "Corporate/private option"
+      ]
+    },
+    {
+      "id": "scholarship-mentoring",
+      "title": "Bimbingan Beasiswa",
+      "category": "Mentoring",
+      "level": "Pelajar–Profesional",
+      "duration": "Fleksibel",
+      "meetings": "Mentoring",
+      "mode": "Online",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Strategi aplikasi",
+        "Review dokumen",
+        "Persiapan wawancara"
+      ]
+    },
+    {
+      "id": "campus-application",
+      "title": "Bimbingan Mendaftar Kampus 13+ Negara",
+      "category": "Mentoring",
+      "level": "Pelajar–Profesional",
+      "duration": "Sesuai proses aplikasi",
+      "meetings": "Pendampingan",
+      "mode": "Online",
+      "price": null,
+      "oldPrice": null,
+      "billingUnit": "",
+      "features": [
+        "Pemilihan kampus",
+        "Review aplikasi",
+        "Pendampingan proses"
+      ]
+    }
   ],
   "tests": [
-    {"id":"placement","title":"Placement Test","minutes":15,"questions":15,"price":0},
-    {"id":"toefl-prediction","title":"TOEFL Prediction","minutes":120,"questions":140,"price":175000},
-    {"id":"ielts-simulation","title":"IELTS Simulation","minutes":165,"questions":80,"price":250000}
+    {
+      "id": "placement",
+      "title": "English Preparation Diagnostic",
+      "minutes": 15,
+      "questions": 15,
+      "price": 0
+    },
+    {
+      "id": "toefl-prediction",
+      "title": "TOEFL Full Practice",
+      "minutes": 120,
+      "questions": 140,
+      "price": 175000
+    },
+    {
+      "id": "ielts-simulation",
+      "title": "IELTS Full Practice",
+      "minutes": 165,
+      "questions": 80,
+      "price": 250000
+    },
+    {
+      "id": "ielts-mini",
+      "title": "IELTS Mini Preparation",
+      "minutes": 20,
+      "questions": 10,
+      "price": 0
+    },
+    {
+      "id": "toefl-mini",
+      "title": "TOEFL iBT 2026 Mini Preparation",
+      "minutes": 15,
+      "questions": 10,
+      "price": 0
+    }
   ],
   "menus": [
-    {"id":"home","label":"Home","href":"#/home","order":1,"active":true},
-    {"id":"programs","label":"Program","href":"#/programs","order":2,"active":true},
-    {"id":"tests","label":"Tes Online","href":"#/tests","order":3,"active":true},
-    {"id":"pricing","label":"Paket & Harga","href":"#/pricing","order":4,"active":true},
-    {"id":"resources","label":"Sumber Belajar","href":"#/resources","order":5,"active":true},
-    {"id":"about","label":"Tentang","href":"#/about","order":6,"active":true},
-    {"id":"contact","label":"Kontak","href":"#/contact","order":7,"active":true}
-  ]
+    {
+      "id": "home",
+      "label": "Home",
+      "href": "#/home",
+      "order": 1,
+      "active": true
+    },
+    {
+      "id": "programs",
+      "label": "Program",
+      "href": "#/programs",
+      "order": 2,
+      "active": true
+    },
+    {
+      "id": "tests",
+      "label": "Tes Online",
+      "href": "#/tests",
+      "order": 3,
+      "active": true
+    },
+    {
+      "id": "pricing",
+      "label": "Paket & Harga",
+      "href": "#/pricing",
+      "order": 4,
+      "active": true
+    },
+    {
+      "id": "resources",
+      "label": "Sumber Belajar",
+      "href": "#/resources",
+      "order": 5,
+      "active": true
+    },
+    {
+      "id": "about",
+      "label": "Profil Lembaga",
+      "href": "#/about",
+      "order": 6,
+      "active": true
+    },
+    {
+      "id": "method",
+      "label": "Kajian Tes",
+      "href": "#/method",
+      "order": 7,
+      "active": true
+    },
+    {
+      "id": "contact",
+      "label": "Kontak",
+      "href": "#/contact",
+      "order": 8,
+      "active": true
+    }
+  ],
+  "institutionProfile": {
+    "name": "IELTS_MATE",
+    "legalPosition": "Lembaga persiapan dan pembelajaran bahasa Inggris independen",
+    "profileStatement": "IELTS_MATE adalah lembaga persiapan dan pembelajaran bahasa Inggris yang menghadirkan program terstruktur untuk membantu peserta mengembangkan kemampuan akademik, profesional, dan komunikasi sehari-hari. Pembelajaran memadukan diagnosis awal, kelas terarah, latihan mandiri, umpan balik, serta pemantauan progres dalam satu ekosistem digital.",
+    "vision": "Menjadi lembaga persiapan bahasa Inggris yang tepercaya, mudah diakses, dan berorientasi pada perkembangan nyata peserta dari Nusa Tenggara Barat untuk peluang pendidikan dan karier yang lebih luas.",
+    "mission": [
+      "Menyediakan pembelajaran bahasa Inggris yang terstruktur, relevan, dan terjangkau.",
+      "Mendampingi peserta melalui target belajar yang jelas, latihan terukur, dan umpan balik berkala.",
+      "Memanfaatkan teknologi untuk memperluas akses, menjaga konsistensi belajar, dan memudahkan pemantauan progres.",
+      "Mengembangkan layanan IELTS, TOEFL, General English, Academic English, dan mentoring sesuai kebutuhan peserta.",
+      "Menjalankan layanan secara transparan, bertanggung jawab, dan terus meningkatkan mutu program."
+    ],
+    "values": [
+      "Integritas",
+      "Berpusat pada peserta",
+      "Progres terukur",
+      "Aksesibilitas",
+      "Perbaikan berkelanjutan"
+    ],
+    "learningModel": [
+      "Diagnosis kebutuhan",
+      "Rencana belajar",
+      "Kelas dan materi",
+      "Latihan terarah",
+      "Feedback manusia",
+      "Evaluasi progres",
+      "Pengakuan penyelesaian"
+    ],
+    "founderName": "Sumawartini, M.TESOL",
+    "founderTitle": "Founder & Program Director",
+    "address": "Perumahan Aghniya Harmony, Terong Tawah, Kec. Labuapi, Kab. Lombok Barat, Nusa Tenggara Barat 83361",
+    "phone": "+62 878-6405-3222",
+    "email": "sumawartinitajalli@gmail.com",
+    "disclaimer": "IELTS_MATE merupakan lembaga persiapan independen. Program latihan, diagnostic, dan sertifikat pengakuan bukan tes, skor, atau sertifikat IELTS/TOEFL resmi."
+  }
 }

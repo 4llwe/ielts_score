@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "netlify dev",
     "check": "node scripts-check.mjs",
-    "deploy": "netlify deploy --prod"
+    "deploy": "netlify deploy --prod",
+    "check:production": "node scripts/verify-production.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^9.1.2",
@@ -16,5 +17,7 @@
   "devDependencies": {
     "netlify-cli": "^23.5.0"
   },
-  "engines": {"node": ">=20"}
+  "engines": {
+    "node": ">=20"
+  }
 }
