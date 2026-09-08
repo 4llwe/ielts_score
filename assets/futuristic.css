@@ -8,3 +8,6 @@
 /* Responsive correction after theme cascade */
 @media(max-width:900px){.hero-grid,.dashboard{grid-template-columns:1fr}.hero-panel{width:100%;max-width:620px}.dashboard .sidebar{overflow:auto}.dashboard .side-nav{display:flex}}
 @media(max-width:600px){.hero-panel{max-width:100%}.hero-grid{gap:32px}.dashboard .sidebar{position:sticky;top:78px}}
+.program-card[hidden] {
+  display: none !important;
+}
