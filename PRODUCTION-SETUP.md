@@ -9,6 +9,9 @@
    - `supabase/migrations/003_recognition_certificates.sql`
    - `supabase/migrations/004_institution_profile.sql`
    - `supabase/migrations/005_full_operations.sql`
+   - `supabase/migrations/006_commercial_hardening.sql`
+   - `supabase/migrations/007_preparation_branding.sql`
+   - `supabase/migrations/008_toefl_preparation_form_a.sql`
 3. Di Authentication, aktifkan email confirmation dan atur Site URL ke domain produksi.
 4. Tambahkan redirect URL Netlify preview dan domain produksi.
 5. Buat pengguna admin, lalu jalankan:
@@ -30,7 +33,7 @@ update public.profiles set role='admin' where email='EMAIL_ADMIN_ANDA';
 https://DOMAIN-ANDA/api/payments/webhook
 ```
 
-4. Atur Finish URL ke `https://DOMAIN-ANDA/#/dashboard`.
+4. Atur Finish URL ke `https://DOMAIN-ANDA/dashboard`.
 5. Setelah seluruh skenario lulus, ubah `MIDTRANS_IS_PRODUCTION=true` dan gunakan production keys.
 
 Skenario wajib: sukses, pending, deny, cancel, expire, refund, notifikasi duplikat, dan signature tidak valid.

@@ -1,5 +1,45 @@
 # Changelog
 
+## 5.0.0 — TOEFL Preparation Classroom Practice Form A
+
+- Imported the supplied original 68-item classroom pack.
+- Added secure server-side answer keys, browser-delivered listening prompts, Speaking recording uploads, and examiner queue creation.
+- Added `classroom_ready` low-stakes validation status and explicit non-official-score limits.
+- Added a private-materials boundary and a clean `dist/` build that excludes migrations, source packs, and answer keys.
+
+
+## 4.0.0 — Preparation-only brand wording and launch evidence pack
+
+- Normalized program wording to IELTS Preparation and TOEFL Preparation.
+- Removed the unverified official-test registration product.
+- Added prominent independent-preparation/non-affiliation disclosures.
+- Added legal, content-rights, psychometric, examiner, penetration-test, payment, backup, accessibility, and pilot acceptance procedures.
+- Added a launch-evidence checker that intentionally blocks approval until signed production evidence exists.
+
+
+## 3.0.0 — Maximum-readiness hardening (2026-09-09)
+
+- Moved access and refresh tokens to Secure HttpOnly cookies with automatic refresh and server logout.
+- Added database-backed abuse rate limits and strict same-origin mutation checks.
+- Added privacy export/deletion requests, authenticated support tickets, upload restrictions, and HTTPS URL validation.
+- Added content-rights and test-validation publication gates.
+- Added calibrated four-criterion Writing/Speaking scoring on the 0–9 band scale.
+- Added CI, release/security checks, incident response, retention, and release acceptance documentation.
+
+
+## 2.0.0 — Commercial readiness upgrade (2026-09-09)
+
+- Rebuilt the public experience around a clear value proposition and conversion path.
+- Migrated hash navigation to clean, indexable History API routes with Netlify fallback.
+- Added dynamic SEO metadata, canonical URLs, Open Graph, JSON-LD, robots.txt, and sitemap.xml.
+- Added full Privacy, Terms, Refund, Cookie, Accessibility, Support, and Trust Center pages.
+- Added password recovery with an account-enumeration-safe response.
+- Added same-origin protection for state-changing API requests when SITE_URL is configured.
+- Expanded the resource hub, editorial metadata, and assessment/trademark disclaimers.
+- Added commercial responsive styles and verified desktop/mobile rendering.
+- Reached zero automated WCAG A/AA violations on the tested home and login routes.
+- Added COMMERCIAL-READINESS.md with implemented improvements, launch gates, and KPIs.
+
 ## v1.2.0 — Perbaikan suara Listening
 
 - Menghapus penggunaan audio demo yang hanya menghasilkan nada `tut`.

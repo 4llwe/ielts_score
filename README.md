@@ -1,4 +1,4 @@
-# IELTS_MATE Platform
+# IELTS_MATE Platform — Commercial Candidate v5
 
 MVP full-stack siap deploy untuk mengubah landing page IELTS_MATE menjadi platform kursus, tes, dashboard multi-peran, CMS navigasi, dan API dasar.
 
@@ -60,9 +60,9 @@ npx netlify deploy --prod
 - `GET /api/health`
 - `GET /api/public`
 - `POST /api/auth/login`
-- `GET /api/admin/content` — token admin
-- `PUT /api/admin/content` — token admin
-- `GET /api/admin/audit` — token admin
+- `GET /api/admin/content` — sesi admin terautentikasi
+- `PUT /api/admin/content` — sesi admin terautentikasi
+- `GET /api/admin/audit` — sesi admin terautentikasi
 
 ## Struktur
 
@@ -95,7 +95,7 @@ README.md
 
 ## Trademark
 
-IELTS dan TOEFL adalah merek pemiliknya masing-masing. Jangan menyatakan kemitraan, otorisasi, atau status tes resmi tanpa bukti dan izin tertulis.
+Gunakan istilah “IELTS Preparation” dan “TOEFL Preparation” hanya untuk menjelaskan tujuan program. IELTS dan TOEFL adalah merek pemiliknya masing-masing. Jangan memakai logo pemilik ujian atau menyatakan afiliasi, sponsor, pengesahan, maupun status penyelenggara tes.
 
 
 ## Preparation Lab terintegrasi
@@ -109,4 +109,16 @@ Menu Tes Online kini mencakup IELTS Mini Preparation dan TOEFL iBT 2026 Mini Pre
 - Midtrans: Snap payment dan webhook dengan verifikasi signature.
 - Netlify: hosting, Functions, HTTPS, headers, dan deployment.
 
-Jalankan seluruh migrasi `supabase/migrations/001` sampai `005` secara berurutan, isi environment variables dari `.env.example`, lalu ikuti `PRODUCTION-SETUP.md`. Gunakan `npm run check:production` di lingkungan yang telah memiliki secrets.
+Jalankan seluruh migrasi `supabase/migrations/001` sampai `008` secara berurutan, isi environment variables dari `.env.example`, lalu ikuti `PRODUCTION-SETUP.md`. Gunakan `npm run check:production` di lingkungan yang telah memiliki secrets.
+
+## Brand wording v4
+
+Istilah ujian digunakan hanya dalam frasa **IELTS Preparation** dan **TOEFL Preparation** sebagai deskripsi tujuan belajar independen. Katalog tidak menawarkan tes resmi dan tidak menggunakan logo pemilik ujian.
+
+## External evidence pack
+
+Prosedur siap pakai tersedia di `ops/`. Simpan bukti nyata di `evidence/` dan jalankan `npm run check:evidence`. Jangan memasukkan secret ke arsip bukti.
+
+## TOEFL Preparation Classroom Practice — Form A
+
+Paket yang diberikan pengguna telah diintegrasikan sebagai 68 item Reading, Listening, Writing, dan Speaking. Listening/Speaking memakai browser speech synthesis sampai rekaman manusia berlisensi tersedia. Writing dan Speaking masuk ke antrian examiner. Status `classroom_ready` membatasi penggunaan pada latihan kelas berisiko rendah dan tidak menyatakan ekuivalensi skor resmi. Sumber operator disimpan di `private-materials/` dan tidak masuk build publik.

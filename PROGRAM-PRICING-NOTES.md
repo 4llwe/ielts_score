@@ -6,11 +6,11 @@ Harga yang memiliki angka berasal dari materi promosi yang diberikan:
 |---|---:|---:|---|
 | IELTS Preparation Online Course | Rp1.750.000 | Rp2.350.000 | per kelas |
 | IELTS Academic Preparation | Rp1.750.000 | Rp2.350.000 | per kelas |
-| IELTS Private Coaching | Rp150.000 | — | per pertemuan |
+| IELTS Preparation Private Coaching | Rp150.000 | — | per pertemuan |
 | TOEFL Preparation Class | Rp1.375.000 | Rp1.975.000 | per kelas |
 | SpeakUp Academy | Rp175.000 | Rp550.000 | per level |
-| IELTS for WHV | Rp1.975.000 | Rp2.975.000 | per kelas |
+| IELTS Preparation for WHV | Rp1.975.000 | Rp2.975.000 | per kelas |
 
 Program lain ditampilkan dengan status **Konsultasikan biaya** karena materi tidak mencantumkan nominal. Sistem tidak mengarang biaya untuk program tersebut.
 
-Sebelum mengaktifkan pembayaran produksi, pengelola harus menetapkan tanggal mulai/akhir promo, kuota, kebijakan pengulangan, refund, pajak, serta apa saja yang termasuk dalam harga. Klaim “Official Test” hanya boleh digunakan jika status dan izin penyelenggara dapat diverifikasi; katalog menggunakan frasa “Pendaftaran TOEFL Official Test” agar tidak menyatakan bahwa IELTS_MATE adalah pemilik tes.
+Sebelum mengaktifkan pembayaran produksi, pengelola harus menetapkan tanggal mulai/akhir promo, kuota, kebijakan pengulangan, refund, pajak, serta apa saja yang termasuk dalam harga. Katalog hanya menggunakan frasa IELTS Preparation dan TOEFL Preparation sebagai deskripsi pembelajaran independen; tidak ada produk pendaftaran atau penyelenggaraan tes resmi.

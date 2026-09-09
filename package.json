@@ -1,13 +1,18 @@
 {
   "name": "ielts-mate-platform",
-  "version": "1.0.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
     "check": "node scripts-check.mjs",
     "deploy": "netlify deploy --prod",
-    "check:production": "node scripts/verify-production.mjs"
+    "check:production": "node scripts/verify-production.mjs",
+    "check:security": "node scripts/security-check.mjs",
+    "check:release": "node scripts/release-check.mjs",
+    "verify": "npm run check && npm run check:security && npm run check:release && npm run build",
+    "check:evidence": "node scripts/readiness-evidence-check.mjs",
+    "build": "node scripts/build.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^9.1.2",
