@@ -20,6 +20,9 @@ const navigate = (path, replace = false) => {
   const target = String(path || "/home").replace(/^#/, "");
   history[replace ? "replaceState" : "pushState"]({}, "", target);
   render();
+  // Inform independently loaded route modules (dashboard/test) after an
+  // in-page navigation. pushState does not emit popstate by itself.
+  window.dispatchEvent(new Event("ielts:navigation"));
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 async function apiCall(path, options = {}, retry = true) {

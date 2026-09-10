@@ -886,8 +886,15 @@ function maybeRender() {
   const dashboardRoute =
     window.__QA_ROUTE === "dashboard" ||
     location.pathname.startsWith("/dashboard");
-  if (dashboardRoute && session()?.authenticated) setTimeout(shell, 0);
+  if (
+    dashboardRoute &&
+    session()?.authenticated &&
+    !document.querySelector(".live-dashboard")
+  )
+    setTimeout(shell, 0);
 }
 window.addEventListener("popstate", maybeRender);
 window.addEventListener("load", maybeRender);
+window.addEventListener("ielts:navigation", maybeRender);
+window.addEventListener("pageshow", maybeRender);
 maybeRender();
