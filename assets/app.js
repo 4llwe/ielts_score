@@ -1860,7 +1860,9 @@ async function authenticate(e, form) {
     notify(err.message || "Login gagal");
   }
 }
-qs("#loginForm").onsubmit = (e) => authenticate(e, qs("#loginForm"));
+qs("#loginDialog .dialog-x")?.addEventListener("click", () => {
+  qs("#loginDialog")?.close();
+});
 qs("#navToggle").onclick = () => {
   const n = qs("#publicNav");
   n.classList.toggle("open");
