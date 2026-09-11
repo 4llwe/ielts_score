@@ -111,7 +111,9 @@ async function supabase(
     method,
     headers: {
       apikey: key,
-      authorization: `Bearer ${token || key}`,
+      ...(token || key.startsWith("eyJ")
+  ? { authorization: `Bearer ${token || key}` }
+  : {}),
       "content-type": "application/json",
       prefer,
     },
