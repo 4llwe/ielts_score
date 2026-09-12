@@ -13,6 +13,7 @@ async function api(path, options = {}) {
   const s = session(),
     headers = {
       "content-type": "application/json",
+      ...(s?.accessToken ? { authorization: `Bearer ${s.accessToken}` } : {}),
       ...(options.headers || {}),
     };
 

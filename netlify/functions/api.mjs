@@ -331,7 +331,14 @@ async function login(req) {
   });
   if (rows[0]?.status !== "active")
     return out({ error: "Akun tidak aktif. Hubungi administrator." }, 403);
-  return out({ expiresIn: data.expires_in, user: rows[0] }, 200, {
+  // Return the short-lived access token as a same-tab fallback. Netlify and
+  // privacy-focused browsers can occasionally discard Set-Cookie headers on
+  // rewritten function responses. The refresh token remains HttpOnly-only.
+  return out({
+    expiresIn: data.expires_in,
+    accessToken: data.access_token,
+    user: rows[0],
+  }, 200, {
     "set-cookie": authCookieHeaders(req, data),
   });
 }
@@ -347,7 +354,11 @@ async function refreshSession(req) {
       query: { grant_type: "refresh_token" },
       body: { refresh_token: refreshToken },
     });
-    return out({ ok: true, expiresIn: data.expires_in }, 200, {
+    return out({
+      ok: true,
+      expiresIn: data.expires_in,
+      accessToken: data.access_token,
+    }, 200, {
       "set-cookie": authCookieHeaders(req, data),
     });
   } catch {
@@ -817,27 +828,36 @@ async function attendance(req, u) {
 
 async function adminStats(u) {
   if (!allow(u, ["admin"])) return out({ error: "Forbidden" }, 403);
+  const safeRows = async (label, request) => {
+    try {
+      const rows = await request;
+      return Array.isArray(rows) ? rows : [];
+    } catch (error) {
+      console.warn(`Admin metric unavailable: ${label}`, error.status || error.message);
+      return [];
+    }
+  };
   const [profiles, enrollments, payments, subs, leads] = await Promise.all([
-    supabase("/rest/v1/profiles", {
+    safeRows("profiles", supabase("/rest/v1/profiles", {
       service: true,
       query: { select: "id,status" },
-    }),
-    supabase("/rest/v1/enrollments", {
+    })),
+    safeRows("enrollments", supabase("/rest/v1/enrollments", {
       service: true,
       query: { select: "id,status" },
-    }),
-    supabase("/rest/v1/payments", {
+    })),
+    safeRows("payments", supabase("/rest/v1/payments", {
       service: true,
       query: { select: "amount,status" },
-    }),
-    supabase("/rest/v1/submissions", {
+    })),
+    safeRows("submissions", supabase("/rest/v1/submissions", {
       service: true,
       query: { select: "id,status,due_at" },
-    }),
-    supabase("/rest/v1/leads", {
+    })),
+    safeRows("leads", supabase("/rest/v1/leads", {
       service: true,
       query: { select: "id,status" },
-    }),
+    })),
   ]);
   return out({
     students: profiles.filter((x) => x.status === "active").length,

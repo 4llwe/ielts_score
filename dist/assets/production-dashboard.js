@@ -25,10 +25,43 @@ const date = (v) =>
     : "—";
 const session = () =>
   JSON.parse(sessionStorage.getItem("im-session") || "null");
-async function api(path, options = {}) {
+let refreshPromise = null;
+async function refreshAccessToken() {
+  if (!refreshPromise)
+    refreshPromise = fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      credentials: "same-origin",
+    })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.accessToken)
+          throw new Error(payload.error || "Sesi berakhir.");
+        const current = session() || {};
+        current.authenticated = true;
+        current.accessToken = payload.accessToken;
+        current.expiresAt = Date.now() + Number(payload.expiresIn || 3600) * 1000;
+        sessionStorage.setItem("im-session", JSON.stringify(current));
+        return current;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  return refreshPromise;
+}
+async function api(path, options = {}, retry = true) {
+  const before = session();
+  if (
+    retry &&
+    path !== "auth/refresh" &&
+    before?.expiresAt &&
+    Number(before.expiresAt) <= Date.now() + 30_000
+  )
+    await refreshAccessToken().catch(() => {});
   const s = session();
   const headers = {
     "content-type": "application/json",
+    ...(s?.accessToken ? { authorization: `Bearer ${s.accessToken}` } : {}),
     ...(options.headers || {}),
   };
 
@@ -38,7 +71,25 @@ async function api(path, options = {}) {
     credentials: "same-origin",
   });
   const x = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(x.error || "Permintaan gagal");
+  if (r.status === 401 && retry && path !== "auth/refresh") {
+    try {
+      await refreshAccessToken();
+      return api(path, options, false);
+    } catch {
+      sessionStorage.removeItem("im-session");
+      location.assign("/login?reason=session-expired");
+      throw new Error("Sesi berakhir. Silakan masuk kembali.");
+    }
+  }
+  if (!r.ok) {
+    const message =
+      r.status === 403
+        ? "Akun ini tidak memiliki izin untuk membuka data tersebut."
+        : r.status === 503
+          ? "Layanan data belum siap. Periksa konfigurasi deployment."
+          : x.error || `Permintaan gagal (${r.status}).`;
+    throw Object.assign(new Error(message), { status: r.status });
+  }
   return x;
 }
 const empty = (
@@ -54,6 +105,17 @@ const roleNames = {
   instructor: "Instructor",
   examiner: "Examiner",
   admin: "Super Admin",
+};
+const normalizeRole = (value) => {
+  const role = String(value || "student")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  return ["admin", "administrator", "super_admin", "superadmin"].includes(role)
+    ? "admin"
+    : ["student", "instructor", "examiner"].includes(role)
+      ? role
+      : "student";
 };
 const menus = {
   student: [
@@ -80,10 +142,11 @@ const menus = {
   examiner: ["Ringkasan", "Antrian Evaluasi", "Evaluasi Selesai"],
   admin: [
     "Ringkasan",
+    "Persiapan Tes",
     "Pengguna",
     "Enrollment",
     "Program",
-    "Tes",
+    "Paket Tes",
     "Bank Soal",
     "Kelas",
     "Prospek",
@@ -114,6 +177,8 @@ const icon = (t) =>
     Enrollment: "▦",
     Program: "▱",
     Tes: "◉",
+    "Persiapan Tes": "◉",
+    "Paket Tes": "▣",
     "Bank Soal": "?",
     Kelas: "▤",
     Prospek: "◎",
@@ -124,7 +189,7 @@ const icon = (t) =>
 function shell() {
   const s = session();
   if (!s?.authenticated) return;
-  const role = s.role || "student",
+  const role = normalizeRole(s.role),
     items = menus[role] || menus.student;
   $("#main").innerHTML =
     `<div class="dashboard pro-dashboard live-dashboard"><aside class="sidebar"><div class="brand inverse"><img class="brand-logo" src="${assetUrl("images/ielts-mate-logo.webp")}" alt="IELTS_MATE"><b>${roleNames[role]}</b></div><div class="account-mini"><div class="avatar">${esc((s.full_name || s.email || "U")[0].toUpperCase())}</div><div><b>${esc(s.full_name || s.email?.split("@")[0])}</b><small>${roleNames[role]}</small></div></div><div class="side-nav">${items.map((m, i) => `<button class="${i ? "" : "active"}" data-live-panel="${esc(m)}"><span>${icon(m)}</span>${esc(m)}</button>`).join("")}<button data-live-logout><span>↪</span>Keluar</button></div></aside><section class="workspace"><div class="workspace-head"><div><p class="eyebrow">${roleNames[role].toUpperCase()} WORKSPACE</p><h1>${role === "admin" ? "Pusat kendali operasional" : "Selamat datang kembali"}</h1><p class="workspace-sub">Data dashboard bersumber dari layanan produksi.</p></div><div class="head-actions"><span class="status live">● Terautentikasi</span></div></div><div id="liveContent">${loading()}</div></section></div>`;
@@ -151,7 +216,7 @@ async function loadPanel(name) {
   if (!c) return;
   c.innerHTML = loading();
   try {
-    const role = session().role;
+    const role = normalizeRole(session()?.role);
     c.innerHTML = await panel(role, name);
     bindPanel(name);
   } catch (e) {
@@ -224,7 +289,7 @@ async function studentPanel(name) {
         "Program aktif setelah pembayaran atau aktivasi admin.",
       ) +
       (x.length
-        ? `<div class="dashboard-cards">${x.map((e) => `<article class="course-card"><span class="status ${e.status === "active" ? "live" : ""}">${esc(e.status)}</span><h3>${esc(e.programs?.title)}</h3><p>${esc(e.programs?.description || e.programs?.mode || "")}</p><div class="mini-progress"><i style="width:${Number(e.progress || 0)}%"></i></div><div class="card-meta"><span>${Number(e.progress || 0)}%</span><b>${esc(e.classes?.name || "Penempatan kelas diproses")}</b></div></article>`).join("")}</div>`
+        ? `<div class="dashboard-cards">${x.map((e) => `<article class="course-card"><span class="status ${e.status === "active" ? "live" : ""}">${esc(e.status)}</span><h3>${esc(e.programs?.title)}</h3><p>${esc(e.programs?.description || e.programs?.mode || "")}</p><progress class="mini-progress" max="100" value="${Math.max(0, Math.min(100, Number(e.progress || 0)))}" aria-label="Progres program"></progress><div class="card-meta"><span>${Number(e.progress || 0)}%</span><b>${esc(e.classes?.name || "Penempatan kelas diproses")}</b></div></article>`).join("")}</div>`
         : empty(
             "Belum ada enrollment",
             "Program akan muncul setelah pembayaran berhasil.",
@@ -516,6 +581,21 @@ async function adminPanel(name) {
       `<div class="stats"><div class="stat"><small>Akun aktif</small><strong>${x.students}</strong><span>Profiles</span></div><div class="stat"><small>Enrollment aktif</small><strong>${x.enrollments}</strong><span>Programs</span></div><div class="stat"><small>Pendapatan dibayar</small><strong>${money(x.revenue)}</strong><span>Settlement/capture</span></div><div class="stat"><small>Evaluasi tertunda</small><strong>${x.pendingEvaluations}</strong><span>Queued</span></div></div>`
     );
   }
+  if (name === "Persiapan Tes") {
+    const [tests, questions, classes] = await Promise.all([
+      api("admin/tests"),
+      api("admin/questions"),
+      api("classes"),
+    ]);
+    return (
+      heading(
+        "ASSESSMENT SETUP",
+        "Persiapan tes, soal, dan kelas",
+        "Siapkan paket tes, isi bank soal, lalu hubungkan program ke kelas.",
+      ) +
+      `<div class="stats"><div class="stat"><small>Paket tes</small><strong>${tests.length}</strong><span>Draft dan terbit</span></div><div class="stat"><small>Bank soal</small><strong>${questions.length}</strong><span>Semua item</span></div><div class="stat"><small>Kelas</small><strong>${classes.length}</strong><span>Semua status</span></div></div><div class="dashboard-cards setup-cards"><article class="course-card"><span class="tag">LANGKAH 1</span><h3>Buat paket tes</h3><p>Atur tipe, durasi, validasi, dan status publikasi.</p><button class="btn primary" data-admin-open="Paket Tes">Buka Paket Tes</button></article><article class="course-card"><span class="tag">LANGKAH 2</span><h3>Tambahkan soal</h3><p>Pilih paket tes, bagian, tipe item, jawaban, dan hak konten.</p><button class="btn primary" data-admin-open="Bank Soal">Buka Bank Soal</button></article><article class="course-card"><span class="tag">LANGKAH 3</span><h3>Siapkan kelas</h3><p>Hubungkan program, instructor, periode, dan kapasitas kelas.</p><button class="btn primary" data-admin-open="Kelas">Buka Kelas</button></article></div>`
+    );
+  }
   if (name === "Pengguna") {
     const x = await api("admin/users");
     return (
@@ -584,7 +664,7 @@ async function adminPanel(name) {
       )
     );
   }
-  if (name === "Tes") {
+  if (name === "Tes" || name === "Paket Tes") {
     const x = await api("admin/tests");
     return (
       heading(
@@ -738,6 +818,16 @@ async function adminPanel(name) {
   return empty();
 }
 function bindPanel(name) {
+  $$("[data-admin-open]").forEach(
+    (button) =>
+      (button.onclick = () => {
+        const target = button.dataset.adminOpen;
+        $$("[data-live-panel]").forEach((item) =>
+          item.classList.toggle("active", item.dataset.livePanel === target),
+        );
+        loadPanel(target);
+      }),
+  );
   const form = (sel, path, transform = (x) => x) => {
     $(sel)?.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -882,12 +972,31 @@ function bindPanel(name) {
     await loadPanel(name);
   });
 }
+let shellScheduled = false;
 function maybeRender() {
   const dashboardRoute =
     window.__QA_ROUTE === "dashboard" ||
-    location.pathname.startsWith("/dashboard");
-  if (dashboardRoute && session()?.authenticated) setTimeout(shell, 0);
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/admin");
+  if (
+    dashboardRoute &&
+    session()?.authenticated &&
+    !document.querySelector(".live-dashboard") &&
+    !shellScheduled
+  ) {
+    shellScheduled = true;
+    setTimeout(() => {
+      shellScheduled = false;
+      if (
+        session()?.authenticated &&
+        !document.querySelector(".live-dashboard")
+      )
+        shell();
+    }, 0);
+  }
 }
 window.addEventListener("popstate", maybeRender);
 window.addEventListener("load", maybeRender);
+window.addEventListener("ielts:navigation", maybeRender);
+window.addEventListener("pageshow", maybeRender);
 maybeRender();

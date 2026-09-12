@@ -8,6 +8,7 @@ for (const item of [
   "assets",
   "data",
   "manifest.webmanifest",
+  "favicon.ico",
   "sw.js",
   "robots.txt",
   "sitemap.xml",

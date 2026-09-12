@@ -10,6 +10,30 @@ const money = (n) =>
       }).format(n);
 const localPreview =
   location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const normalizeRole = (value) => {
+  const role = String(value || "student")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  return ["admin", "administrator", "super_admin", "superadmin"].includes(role)
+    ? "admin"
+    : ["student", "instructor", "examiner"].includes(role)
+      ? role
+      : "student";
+};
+const normalizeMenuItem = (item) => {
+  let href = String(item?.href || "/home").trim();
+  href = href.replace(/^#(?=\/)/, "");
+  if (!href.startsWith("/")) href = `/${href.replace(/^\/+/, "")}`;
+  if (item?.id === "method" || href === "/method")
+    return {
+      ...item,
+      id: "alumni",
+      label: "Alumni & Testimoni",
+      href: "/alumni",
+    };
+  return { ...item, href };
+};
 const routePath = () => {
   if (window.__QA_ROUTE)
     return `/${String(window.__QA_ROUTE).replace(/^\/+/, "")}`;
@@ -28,6 +52,9 @@ const navigate = (path, replace = false) => {
 async function apiCall(path, options = {}, retry = true) {
   const headers = {
     "content-type": "application/json",
+    ...(session?.accessToken
+      ? { authorization: `Bearer ${session.accessToken}` }
+      : {}),
     ...(options.headers || {}),
   };
   const r = await fetch("/api/" + path, {
@@ -42,7 +69,16 @@ async function apiCall(path, options = {}, retry = true) {
       headers: { "content-type": "application/json" },
       credentials: "same-origin",
     });
-    if (refreshed.ok) return apiCall(path, options, false);
+    if (refreshed.ok) {
+      const refreshedData = await refreshed.json().catch(() => ({}));
+      if (refreshedData.accessToken && session) {
+        session.accessToken = refreshedData.accessToken;
+        session.expiresAt =
+          Date.now() + (refreshedData.expiresIn || 3600) * 1000;
+        sessionStorage.setItem("im-session", JSON.stringify(session));
+      }
+      return apiCall(path, options, false);
+    }
     session = null;
     sessionStorage.removeItem("im-session");
   }
@@ -95,7 +131,7 @@ async function syncPublicData() {
         questions: 0,
         price: Number(t.price || 0),
       }));
-    if (Array.isArray(x.menus)) data.menus = x.menus;
+    if (Array.isArray(x.menus)) data.menus = x.menus.map(normalizeMenuItem);
     nav();
   } catch (e) {
     if (!localPreview) console.warn("Public data:", e.message);
@@ -447,9 +483,9 @@ const fallback = {
       active: true,
     },
     {
-      id: "method",
-      label: "Kajian Tes",
-      href: "/method",
+      id: "alumni",
+      label: "Alumni & Testimoni",
+      href: "/alumni",
       order: 7,
       active: true,
     },
@@ -464,7 +500,11 @@ const fallback = {
 };
 let data =
   JSON.parse(localStorage.getItem("im-content-v2") || "null") || fallback;
+data.menus = Array.isArray(data.menus)
+  ? data.menus.map(normalizeMenuItem)
+  : fallback.menus.map(normalizeMenuItem);
 let session = JSON.parse(sessionStorage.getItem("im-session") || "null");
+if (session) session.role = normalizeRole(session.role);
 const defaultInstitution = {
   name: "IELTS_MATE",
   legalPosition: "Lembaga persiapan dan pembelajaran bahasa Inggris independen",
@@ -541,7 +581,7 @@ function nav() {
     .sort((a, b) => a.order - b.order)
     .map(
       (m) =>
-        `<a href="${String(m.href).replace(/^#/, "")}" ${route === String(m.href).replace(/^#/, "") ? 'aria-current="page"' : ""}>${esc(m.label)}</a>`,
+        `<a href="${esc(m.href)}" ${route === m.href ? 'aria-current="page"' : ""}>${esc(m.label)}</a>`,
     )
     .join("");
 }
@@ -582,7 +622,7 @@ function home() {
   <section class="section"><div class="shell"><div class="section-head"><div><p class="eyebrow">PROGRAM PILIHAN</p><h2>Mulai dari tujuan, bukan sekadar materi</h2></div><p>Setiap program menjelaskan format, durasi, biaya, dan hasil belajar sebelum peserta mendaftar.</p></div>${programCards()}</div></section>
   <section class="section soft"><div class="shell"><div class="section-head"><div><p class="eyebrow">LEARNING JOURNEY</p><h2>Satu alur dari diagnosis hingga evaluasi</h2></div><p>Pengalaman belajar dirancang agar peserta selalu mengetahui posisi saat ini dan langkah berikutnya.</p></div><ol class="journey-pro"><li><span>01</span><div><b>Ukur baseline</b><p>Diagnostic awal memetakan kebutuhan tanpa mengklaim skor resmi.</p></div></li><li><span>02</span><div><b>Tetapkan target</b><p>Pilih tujuan, tenggat, format kelas, dan ritme belajar realistis.</p></div></li><li><span>03</span><div><b>Belajar & berlatih</b><p>Materi, kelas, tugas, dan practice test berada dalam satu akun.</p></div></li><li><span>04</span><div><b>Dapatkan feedback</b><p>Hasil objektif, review manusia, dan riwayat progres membentuk latihan berikutnya.</p></div></li></ol></div></section>
   <section class="section"><div class="shell"><div class="section-head"><div><p class="eyebrow">UNTUK SETIAP PERAN</p><h2>Operasional yang benar-benar terhubung</h2></div></div><div class="role-grid"><article><span>Peserta</span><h3>Belajar dengan arah</h3><p>Program, jadwal, tugas, hasil, feedback, notifikasi, dan sertifikat.</p></article><article><span>Instructor</span><h3>Kelola kelas</h3><p>Siswa, materi, tugas, kehadiran, dan jadwal dalam satu workspace.</p></article><article><span>Examiner</span><h3>Feedback terstandar</h3><p>Antrian evaluasi Writing dan Speaking dengan rubrik dan tenggat.</p></article><article><span>Admin</span><h3>Kendalikan bisnis</h3><p>Katalog, enrollment, pembayaran, CRM, konten, akses, dan audit log.</p></article></div></div></section>
-  <section class="section evidence-section"><div class="shell evidence-grid"><div><p class="eyebrow">MUTU & TRANSPARANSI</p><h2>Persiapan independen dengan batas layanan yang jelas.</h2><p>Kami memisahkan latihan internal, feedback pembelajaran, dan sertifikat penyelesaian dari hasil tes resmi. Materi produksi harus melalui review konten, lisensi, rubrik, dan quality assurance.</p><div class="hero-actions"><a class="btn primary" href="/method">Lihat metodologi</a><a class="btn" href="/trust">Pusat kepercayaan</a></div></div><div class="evidence-list"><div><b>Penilaian bertanggung jawab</b><span>Skor diagnostik program preparation tidak dipasarkan sebagai skor ujian resmi.</span></div><div><b>Hak akses terkontrol</b><span>Peran ditetapkan administrator dan diverifikasi di server.</span></div><div><b>Jejak perubahan</b><span>Aktivitas administratif penting tercatat dalam audit log.</span></div></div></div></section>
+  <section class="section evidence-section"><div class="shell evidence-grid"><div><p class="eyebrow">MUTU & TRANSPARANSI</p><h2>Persiapan independen dengan batas layanan yang jelas.</h2><p>Kami memisahkan latihan internal, feedback pembelajaran, dan sertifikat penyelesaian dari hasil tes resmi. Materi produksi harus melalui review konten, lisensi, rubrik, dan quality assurance.</p><div class="hero-actions"><a class="btn primary" href="/alumni">Lihat alumni</a><a class="btn" href="/trust">Pusat kepercayaan</a></div></div><div class="evidence-list"><div><b>Penilaian bertanggung jawab</b><span>Skor diagnostik program preparation tidak dipasarkan sebagai skor ujian resmi.</span></div><div><b>Hak akses terkontrol</b><span>Peran ditetapkan administrator dan diverifikasi di server.</span></div><div><b>Jejak perubahan</b><span>Aktivitas administratif penting tercatat dalam audit log.</span></div></div></div></section>
   <section class="section institution-home"><div class="shell institution-home-grid"><div><p class="eyebrow">DIPIMPIN PENDIDIK</p><h2>Program yang berpusat pada kebutuhan peserta.</h2><p>IELTS_MATE menghubungkan pendampingan manusia dan teknologi agar proses belajar tetap personal, terukur, dan mudah dipantau.</p><a class="text-link" href="/about">Kenali lembaga dan pengelola →</a></div><img src="/assets/images/director-sumawartini.webp" alt="Sumawartini, M.TESOL, Founder dan Program Director" loading="lazy" width="640" height="640"></div></section>
   <section class="section"><div class="shell cta"><div><p class="eyebrow">LANGKAH PERTAMA</p><h2>Temukan jalur belajar yang sesuai target Anda.</h2><p>Mulai dengan diagnostic gratis atau konsultasikan kebutuhan program.</p></div><div class="hero-actions"><a class="btn secondary" href="/register">Buat akun</a><a class="btn ghost-on-dark" href="/contact">Konsultasi</a></div></div></section>`;
 }
@@ -616,7 +656,7 @@ function tests() {
       "Latihan preparation yang terukur",
       "Kerjakan tes, simpan jawaban otomatis, dan pantau hasil dalam dashboard.",
     ) +
-    `<section class="section"><div class="shell"><div class="cards">${data.tests.map((t) => `<article class="card"><span class="tag">${t.price ? "PREMIUM" : "GRATIS"}</span><h3>${esc(t.title)}</h3><p>${t.minutes} menit · ${t.questions} soal · autosave · laporan hasil</p><div class="card-meta"><b>${t.price ? money(t.price) : "Gratis"}</b><a href="/test/${t.id}">Mulai →</a></div></article>`).join("")}</div><p class="notice" style="margin-top:24px">Produk merupakan latihan internal untuk IELTS Preparation dan TOEFL Preparation; bukan tes atau skor resmi.</p></div></section>`
+    `<section class="section"><div class="shell"><div class="cards">${data.tests.map((t) => `<article class="card"><span class="tag">${t.price ? "PREMIUM" : "GRATIS"}</span><h3>${esc(t.title)}</h3><p>${t.minutes} menit · ${t.questions} soal · autosave · laporan hasil</p><div class="card-meta"><b>${t.price ? money(t.price) : "Gratis"}</b><a href="/test/${t.id}">Mulai →</a></div></article>`).join("")}</div><p class="notice notice-spaced">Produk merupakan latihan internal untuk IELTS Preparation dan TOEFL Preparation; bukan tes atau skor resmi.</p></div></section>`
   );
 }
 function pricing() {
@@ -728,7 +768,7 @@ function formPage(kind) {
         ? "Tim akademik akan merespons dalam satu hari kerja."
         : "Buat akun dan pilih target awal.",
     ) +
-    `<section class="section"><div class="shell" style="max-width:920px">${contact ? `<div class="contact-profile"><img src="/assets/images/ielts-mate-logo.webp" alt="Logo IELTS_MATE"><div><p class="eyebrow">PROGRAM DIRECTOR</p><h2>Sumawartini, M.TESOL</h2><p>Perumahan Aghniya Harmony, Terong Tawah, Kec. Labuapi, Kab. Lombok Barat, Nusa Tenggara Barat 83361</p><div class="contact-links"><a href="https://wa.me/6287864053222" target="_blank" rel="noopener">WhatsApp · +62 878-6405-3222</a><a href="mailto:sumawartinitajalli@gmail.com">sumawartinitajalli@gmail.com</a></div></div></div>` : ""}<form class="panel form-grid" data-local-form="${kind}"><label>Nama lengkap<input name="name" required></label><label>Email<input type="email" name="email" required></label><label>WhatsApp<input name="phone" required></label><label>${contact ? "Topik" : "Program"}<select name="topic"><option>IELTS Preparation</option><option>TOEFL Preparation</option><option>English for Nurse</option><option>Private Class</option></select></label><label class="field full">Pesan<textarea name="message" required></textarea></label><label class="field full" style="display:flex;grid-template-columns:auto 1fr;align-items:start"><input style="width:auto" type="checkbox" required><span>Saya menyetujui pemrosesan data sesuai Kebijakan Privasi.</span></label><button class="btn primary" type="submit">${contact ? "Kirim pesan" : "Buat pendaftaran"}</button></form></div></section>`
+    `<section class="section"><div class="shell shell-form-wide">${contact ? `<div class="contact-profile"><img src="/assets/images/ielts-mate-logo.webp" alt="Logo IELTS_MATE"><div><p class="eyebrow">PROGRAM DIRECTOR</p><h2>Sumawartini, M.TESOL</h2><p>Perumahan Aghniya Harmony, Terong Tawah, Kec. Labuapi, Kab. Lombok Barat, Nusa Tenggara Barat 83361</p><div class="contact-links"><a href="https://wa.me/6287864053222" target="_blank" rel="noopener">WhatsApp · +62 878-6405-3222</a><a href="mailto:sumawartinitajalli@gmail.com">sumawartinitajalli@gmail.com</a></div></div></div>` : ""}<form class="panel form-grid" data-local-form="${kind}"><label>Nama lengkap<input name="name" required></label><label>Email<input type="email" name="email" required></label><label>WhatsApp<input name="phone" required></label><label>${contact ? "Topik" : "Program"}<select name="topic"><option>IELTS Preparation</option><option>TOEFL Preparation</option><option>English for Nurse</option><option>Private Class</option></select></label><label class="field full">Pesan<textarea name="message" required></textarea></label><label class="field full consent-field"><input type="checkbox" required><span>Saya menyetujui pemrosesan data sesuai Kebijakan Privasi.</span></label><button class="btn primary" type="submit">${contact ? "Kirim pesan" : "Buat pendaftaran"}</button></form></div></section>`
   );
 }
 function registerPage() {
@@ -738,7 +778,7 @@ function registerPage() {
       "Buat akun IELTS_MATE",
       "Akun digunakan untuk menyimpan progres, pembayaran, evaluasi, dan sertifikat.",
     ) +
-    `<section class="section"><div class="shell" style="max-width:760px"><form id="registerForm" class="panel form-grid"><label>Nama lengkap<input name="full_name" required maxlength="120" autocomplete="name"></label><label>Email<input type="email" name="email" required autocomplete="email"></label><label class="field full">Password<input type="password" name="password" required minlength="10" autocomplete="new-password"><small>Minimal 10 karakter. Gunakan kombinasi unik.</small></label><label class="field full" style="display:flex;grid-template-columns:auto 1fr;align-items:start"><input style="width:auto" type="checkbox" required><span>Saya menyetujui Kebijakan Privasi dan Syarat Layanan.</span></label><button class="btn primary" type="submit">Buat akun</button><p id="registerStatus" class="form-help" role="status"></p></form></div></section>`
+    `<section class="section"><div class="shell shell-form-narrow"><form id="registerForm" class="panel form-grid"><label>Nama lengkap<input name="full_name" required maxlength="120" autocomplete="name"></label><label>Email<input type="email" name="email" required autocomplete="email"></label><label class="field full">Password<input type="password" name="password" required minlength="10" autocomplete="new-password"><small>Minimal 10 karakter. Gunakan kombinasi unik.</small></label><label class="field full consent-field"><input type="checkbox" required><span>Saya menyetujui Kebijakan Privasi dan Syarat Layanan.</span></label><button class="btn primary" type="submit">Buat akun</button><p id="registerStatus" class="form-help" role="status"></p></form></div></section>`
   );
 }
 const legalContent = {
@@ -1089,14 +1129,14 @@ const testBanks = {
     ],
   },
 };
-function method() {
+function alumni() {
   return (
     pageHero(
-      "Kajian Tes",
-      "Metode IELTS Preparation dan TOEFL Preparation",
-      "Panduan desain latihan independen dengan rujukan format publik dari pemilik ujian.",
+      "Alumni & Testimoni",
+      "Cerita belajar dari komunitas IELTS_MATE",
+      "Ruang untuk pengalaman alumni yang telah memperoleh izin dan melalui verifikasi sebelum dipublikasikan.",
     ) +
-    `<section class="section"><div class="shell"><p class="notice"><b>Status penggunaan:</b> layak sebagai latihan dan diagnostik informal; bukan tes resmi, placement berisiko tinggi, atau dasar sertifikasi.</p><div class="compare-grid"><article class="card"><span class="tag">IELTS PREPARATION</span><h3>Komunikasi lintas konteks</h3><p>Listening menggunakan empat rekaman dan variasi respons; Reading menekankan skimming, scanning, detail dan inferensi; Writing memiliki dua tugas; Speaking berlangsung dalam tiga bagian dengan penguji.</p></article><article class="card"><span class="tag">TOEFL PREPARATION</span><h3>Bahasa akademik adaptif</h3><p>Reading dan Listening menggunakan pendekatan adaptif dua tahap. Writing mencakup sentence building, email dan academic discussion; Speaking mencakup listen-and-repeat dan interview.</p></article></div><div class="panel"><h2>Standar sebelum produksi</h2><div class="quality-grid"><div><b>1. Bank soal</b><p>Tambah paket paralel dan blueprint per keterampilan/level.</p></div><div><b>2. Audio</b><p>Ganti speech synthesis dengan rekaman manusia berlisensi.</p></div><div><b>3. Psikometri</b><p>Uji kesulitan, daya beda, reliabilitas dan potensi bias.</p></div><div><b>4. Penilaian</b><p>Moderasi manusia untuk Writing dan Speaking; jangan mengklaim skor resmi.</p></div></div></div><div class="panel source-list"><h2>Sumber resmi</h2><a target="_blank" href="https://ielts.idp.com/indonesia/prepare/ielts-sample-test/en-gb">IDP IELTS sample tests</a><a target="_blank" href="https://ielts.idp.com/indonesia/prepare/listening">IDP Listening format</a><a target="_blank" href="https://www.ets.org/toefl/test-takers/ibt/about/content.html">ETS TOEFL iBT content & structure</a></div></div></section>`
+    `<section class="section"><div class="shell"><div class="section-head"><div><p class="eyebrow">CERITA ALUMNI</p><h2>Testimoni yang jujur dan dapat dipertanggungjawabkan</h2></div><p>Kami tidak membuat kutipan atau hasil belajar tanpa persetujuan alumni.</p></div><div class="cards"><article class="card"><span class="tag">TERVERIFIKASI</span><h3>Cerita alumni sedang dikumpulkan</h3><p>Testimoni pertama akan muncul setelah identitas, program, izin publikasi, dan isi pengalaman selesai ditinjau.</p></article><article class="card"><span class="tag">PRIVASI</span><h3>Alumni menentukan informasi yang tampil</h3><p>Nama dapat disingkat dan foto hanya digunakan jika alumni memberikan persetujuan khusus.</p></article><article class="card"><span class="tag">TRANSPARAN</span><h3>Tidak menjanjikan skor tertentu</h3><p>Pengalaman setiap peserta berbeda. Testimoni tidak digunakan sebagai jaminan hasil ujian atau penerimaan studi.</p></article></div><div class="notice notice-spaced"><b>Catatan:</b> halaman ini sengaja tidak memuat testimoni contoh agar tidak menampilkan klaim alumni yang belum terverifikasi.</div></div></section><section class="section soft"><div class="shell shell-form-wide"><div class="section-head"><div><p class="eyebrow">BAGIKAN PENGALAMAN</p><h2>Sudah pernah belajar bersama IELTS_MATE?</h2></div><p>Kirim pengalaman Anda. Tim akan menghubungi Anda sebelum publikasi.</p></div><form class="panel form-grid" data-local-form="contact"><input type="hidden" name="topic" value="Testimoni alumni"><label>Nama lengkap<input name="name" required autocomplete="name"></label><label>Email<input name="email" type="email" required autocomplete="email"></label><label>WhatsApp<input name="phone" required autocomplete="tel"></label><label>Program yang diikuti<input name="program" required></label><label class="field full">Ceritakan pengalaman Anda<textarea name="message" required minlength="30"></textarea></label><label class="field full consent-field"><input type="checkbox" required><span>Saya setuju dihubungi untuk verifikasi. Pengiriman formulir belum berarti testimoni otomatis dipublikasikan.</span></label><button class="btn primary" type="submit">Kirim untuk ditinjau</button></form></div></section>`
   );
 }
 function prepTestPage(id) {
@@ -1123,7 +1163,7 @@ function prepTestPage(id) {
       bank.label,
       `${bank.minutes} menit · autosave lokal · materi latihan orisinal`,
     ) +
-    `<section class="section test-lab"><div class="shell"><div class="test-toolbar"><div><b>${esc(bank.label)}</b><small>Skor objektif bersifat diagnostik, bukan skor resmi.</small></div><div class="test-time" data-seconds="${bank.minutes * 60}">${String(bank.minutes).padStart(2, "0")}:00</div></div><div class="lab-progress"><i></i></div><section class="listening-player"><div><p class="eyebrow">AUDIO SIMULASI</p><h2>Dengarkan materi sebelum menjawab</h2></div><div class="speech-controls"><button class="btn secondary play-bank" type="button">▶ Putar audio</button><button class="btn ghost-on-dark stop-bank" type="button">■ Hentikan</button><span class="audio-status">Siap diputar</span></div></section><form id="prepForm" data-test-id="${id}" data-audio="${esc(bank.audio)}">${items}<div class="submit-bar"><button class="btn primary" type="submit">Periksa jawaban objektif</button><button class="btn" type="button" data-clear-test>Hapus jawaban</button></div></form><div id="testResult" class="test-result" hidden></div><p class="notice">Materi IELTS Preparation dan TOEFL Preparation ini independen; tidak berafiliasi, disponsori, atau disahkan oleh pemilik ujian.</p></div></section>`
+    `<section class="section test-lab"><div class="shell"><div class="test-toolbar"><div><b>${esc(bank.label)}</b><small>Skor objektif bersifat diagnostik, bukan skor resmi.</small></div><div class="test-time" data-seconds="${bank.minutes * 60}">${String(bank.minutes).padStart(2, "0")}:00</div></div><progress class="lab-progress" max="100" value="0" aria-label="Progres pengerjaan"></progress><section class="listening-player"><div><p class="eyebrow">AUDIO SIMULASI</p><h2>Dengarkan materi sebelum menjawab</h2></div><div class="speech-controls"><button class="btn secondary play-bank" type="button">▶ Putar audio</button><button class="btn ghost-on-dark stop-bank" type="button">■ Hentikan</button><span class="audio-status">Siap diputar</span></div></section><form id="prepForm" data-test-id="${id}" data-audio="${esc(bank.audio)}">${items}<div class="submit-bar"><button class="btn primary" type="submit">Periksa jawaban objektif</button><button class="btn" type="button" data-clear-test>Hapus jawaban</button></div></form><div id="testResult" class="test-result" hidden></div><p class="notice">Materi IELTS Preparation dan TOEFL Preparation ini independen; tidak berafiliasi, disponsori, atau disahkan oleh pemilik ujian.</p></div></section>`
   );
 }
 function setupPrepTest() {
@@ -1133,7 +1173,7 @@ function setupPrepTest() {
     key = "im-prep-" + id;
   let saved = JSON.parse(localStorage.getItem(key) || "{}");
   const fields = qsa("input,textarea", form),
-    bar = qs(".lab-progress i");
+    bar = qs(".lab-progress");
   const update = () => {
     fields.forEach((f) => {
       if (f.type === "radio") {
@@ -1146,7 +1186,7 @@ function setupPrepTest() {
         .filter((f) => (f.type === "radio" ? f.checked : f.value.trim()))
         .map((f) => f.name),
     ).size;
-    bar.style.width = (answered / testBanks[id].items.length) * 100 + "%";
+    bar.value = Math.round((answered / testBanks[id].items.length) * 100);
     qsa("textarea", form).forEach((t) => {
       const n = t.value.trim() ? t.value.trim().split(/\s+/).length : 0;
       t.nextElementSibling.textContent = `${n} kata · minimum ${t.dataset.min}`;
@@ -1395,7 +1435,7 @@ function verificationPage(code) {
 function certificateDocument(code) {
   const c = findCertificate(code);
   if (!c) return verificationPage(code);
-  return `<section class="certificate-page"><div class="certificate-paper"><div class="cert-brand"><img src="/assets/images/ielts-mate-logo.webp" alt="IELTS_MATE"><b>IELTS_MATE</b></div><p class="cert-kicker">${esc(c.type).toUpperCase()}</p><h1>${c.type === "Certificate of Participation" ? "Certificate of Participation" : "Certificate of Completion"}</h1><p class="cert-presented">This certificate is presented to</p><h2>${esc(c.name)}</h2><p class="cert-copy">for ${c.type === "Certificate of Participation" ? "participating in" : "completing"} the independent preparation program</p><h3>${esc(c.program)}</h3><p class="cert-meta">${esc(c.hours)} learning hours · Issued ${new Date(c.issuedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p><div class="cert-footer"><div><span class="signature-line"></span><b>Sumawartini, M.TESOL</b><small>Founder & Program Director · IELTS_MATE</small></div><div class="cert-number"><b>${esc(c.number)}</b><small>Verify at ${location.origin}//verify/${encodeURIComponent(c.number)}</small></div></div><p class="cert-disclaimer">This certificate confirms participation or completion of an independent English preparation program. It is not an official IELTS or TOEFL certificate and does not represent an official language proficiency score.</p></div><div class="certificate-toolbar"><button class="btn primary" onclick="window.print()">Cetak / Simpan PDF</button><a class="btn" href="/verify/${encodeURIComponent(c.number)}">Verifikasi</a><a class="btn" href="/dashboard">Kembali</a></div></section>`;
+  return `<section class="certificate-page"><div class="certificate-paper"><div class="cert-brand"><img src="/assets/images/ielts-mate-logo.webp" alt="IELTS_MATE"><b>IELTS_MATE</b></div><p class="cert-kicker">${esc(c.type).toUpperCase()}</p><h1>${c.type === "Certificate of Participation" ? "Certificate of Participation" : "Certificate of Completion"}</h1><p class="cert-presented">This certificate is presented to</p><h2>${esc(c.name)}</h2><p class="cert-copy">for ${c.type === "Certificate of Participation" ? "participating in" : "completing"} the independent preparation program</p><h3>${esc(c.program)}</h3><p class="cert-meta">${esc(c.hours)} learning hours · Issued ${new Date(c.issuedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p><div class="cert-footer"><div class="cert-signature"><img src="/assets/images/director-signature.png" alt="Tanda tangan Sumawartini, M.TESOL"><span class="signature-line"></span><b>Sumawartini, M.TESOL</b><small>Founder & Program Director · IELTS_MATE</small></div><div class="cert-verification"><img class="certificate-barcode" src="/assets/images/certificate-verification-qr.svg" alt="Barcode QR untuk membuka halaman verifikasi sertifikat"><div class="cert-number"><b>${esc(c.number)}</b><small>Scan barcode atau verifikasi di ${location.origin}/verify/${encodeURIComponent(c.number)}</small></div></div></div><p class="cert-disclaimer">This certificate confirms participation or completion of an independent English preparation program. It is not an official IELTS or TOEFL certificate and does not represent an official language proficiency score.</p></div><div class="certificate-toolbar"><button class="btn primary" type="button" data-print-certificate>Cetak / Simpan PDF</button><a class="btn" href="/verify/${encodeURIComponent(c.number)}">Verifikasi</a><a class="btn" href="/dashboard">Kembali</a></div></section>`;
 }
 function institutionProfilePanel() {
   const p = getInstitution();
@@ -1410,7 +1450,8 @@ const routes = {
   resources,
   article: articlePage,
   about,
-  method,
+  alumni,
+  method: alumni,
   verify: verificationPage,
   certificate: certificateDocument,
   contact: () => formPage("contact"),
@@ -1425,6 +1466,7 @@ const routes = {
   accessibility: accessibilityPage,
   support: supportPage,
   dashboard,
+  admin: dashboard,
 };
 const seoPages = {
   home: [
@@ -1450,6 +1492,10 @@ const seoPages = {
   about: [
     "Profil Lembaga | IELTS_MATE",
     "Kenali visi, metode, lokasi, dan kepemimpinan platform persiapan bahasa Inggris independen IELTS_MATE.",
+  ],
+  alumni: [
+    "Alumni & Testimoni | IELTS_MATE",
+    "Cerita belajar alumni IELTS_MATE yang dipublikasikan setelah izin dan verifikasi.",
   ],
   contact: [
     "Kontak & Konsultasi | IELTS_MATE",
@@ -1524,7 +1570,7 @@ function render() {
           : (routes[route] || notFound)(param);
   document.body.classList.toggle(
     "dashboard-mode",
-    route === "dashboard" && !!session?.authenticated,
+    ["dashboard", "admin"].includes(route) && !!session?.authenticated,
   );
   nav();
   updateSeo(route, param);
@@ -1532,6 +1578,10 @@ function render() {
   main.focus({ preventScroll: true });
 }
 function bind() {
+  qs("[data-print-certificate]")?.addEventListener("click", () => window.print());
+  const dialogLogin = qs("#loginForm");
+  if (dialogLogin)
+    dialogLogin.onsubmit = (e) => authenticate(e, dialogLogin);
   const pageLogin = qs("#pageLoginForm");
   if (pageLogin) pageLogin.onsubmit = (e) => authenticate(e, pageLogin);
   const forgot = qs("#forgotForm");
@@ -1571,9 +1621,10 @@ function bind() {
     (b) =>
       (b.onclick = () => {
         qsa("[data-program-filter]").forEach((x) =>
-          x.classList.remove("active"),
+          (x.classList.remove("active"), x.setAttribute("aria-pressed", "false")),
         );
         b.classList.add("active");
+        b.setAttribute("aria-pressed", "true");
         const f = b.dataset.programFilter;
         qsa(".program-card").forEach(
           (c) => (c.hidden = f !== "Semua" && c.dataset.category !== f),
@@ -1666,7 +1717,6 @@ function bind() {
         b.classList.add("active");
         const title = b.dataset.panel;
         qs("#dashContent").innerHTML = dashboardPanel(title, session.role);
-        bindDashboardActions();
         bindDashboardActions();
         bindCertificateActions();
         bindAdmin();
@@ -1846,14 +1896,16 @@ async function authenticate(e, form) {
     });
     session = {
       ...out.user,
+      role: normalizeRole(out.user?.role),
       authenticated: true,
+      accessToken: out.accessToken,
       expiresAt: Date.now() + (out.expiresIn || 3600) * 1000,
     };
     sessionStorage.setItem("im-session", JSON.stringify(session));
     await syncAttempts();
     await syncCertificates();
     qs("#loginDialog")?.close();
-    navigate("/dashboard");
+    navigate(session.role === "admin" ? "/admin" : "/dashboard");
     notify("Login berhasil");
   } catch (err) {
     if (status) status.textContent = err.message || "Login gagal";
@@ -1893,9 +1945,17 @@ async function restoreSession() {
   if (session?.authenticated) return;
   try {
     const user = await apiCall("me");
-    session = { ...user, authenticated: true };
+    session = {
+      ...user,
+      role: normalizeRole(user?.role),
+      authenticated: true,
+      accessToken: session?.accessToken,
+    };
     sessionStorage.setItem("im-session", JSON.stringify(session));
-    if (routePath().startsWith("/dashboard")) render();
+    if (session.role === "admin" && routePath().startsWith("/dashboard"))
+      navigate("/admin", true);
+    else if (["/dashboard", "/admin"].some((x) => routePath().startsWith(x)))
+      render();
   } catch {}
 }
 const cookieBanner = qs("#cookieBanner");

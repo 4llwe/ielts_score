@@ -374,6 +374,23 @@ textarea {
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
+.shell-form-wide {
+  max-width: 920px;
+}
+.shell-form-narrow {
+  max-width: 760px;
+}
+.consent-field {
+  display: flex;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+.consent-field input {
+  width: auto;
+}
+.notice-spaced {
+  margin-top: 24px;
+}
 .field,
 label {
   display: grid;
@@ -816,18 +833,25 @@ dialog form {
   font-variant-numeric: tabular-nums;
 }
 .lab-progress {
+  display: block;
+  width: 100%;
   height: 7px;
+  border: 0;
+  appearance: none;
   background: #dfe9e6;
   border-radius: 8px;
   overflow: hidden;
   margin: 12px 0 22px;
 }
-.lab-progress i {
-  display: block;
-  width: 0;
-  height: 100%;
+.lab-progress::-webkit-progress-bar {
+  background: #dfe9e6;
+}
+.lab-progress::-webkit-progress-value {
   background: var(--brand2);
   transition: 0.2s;
+}
+.lab-progress::-moz-progress-bar {
+  background: var(--brand2);
 }
 .test-question {
   background: #fff;
@@ -1092,16 +1116,22 @@ dialog form {
   font-size: 13px;
 }
 .mini-progress {
+  display: block;
+  width: 100%;
   clear: both;
   height: 7px;
+  border: 0;
+  appearance: none;
   background: #e3ebe8;
   border-radius: 8px;
   overflow: hidden;
   margin-top: 9px;
 }
-.mini-progress i {
-  display: block;
-  height: 100%;
+.mini-progress::-webkit-progress-bar {
+  background: #e3ebe8;
+}
+.mini-progress::-webkit-progress-value,
+.mini-progress::-moz-progress-bar {
   background: var(--brand2);
 }
 .metric-bars {
@@ -1284,6 +1314,21 @@ dialog form {
   display: flex;
   flex-direction: column;
   min-height: 100%;
+}
+.program-card[hidden] {
+  display: none !important;
+}
+
+body.dashboard-mode .site-header,
+body.dashboard-mode .footer,
+body.dashboard-mode #cookieBanner {
+  display: none !important;
+}
+body.dashboard-mode .pro-dashboard {
+  min-height: 100vh;
+}
+body.dashboard-mode .pro-dashboard .sidebar {
+  top: 0;
 }
 .card-top {
   display: flex;
@@ -1598,6 +1643,9 @@ dialog form {
   color: var(--muted);
   font-size: 13px;
 }
+body:has(.certificate-page) #cookieBanner {
+  display: none !important;
+}
 .certificate-page {
   min-height: 100vh;
   background: #edf3f1;
@@ -1693,10 +1741,34 @@ dialog form {
   display: grid;
   gap: 4px;
 }
+.cert-signature img {
+  width: 190px;
+  height: 74px;
+  object-fit: contain;
+  margin: 0 auto -4px;
+}
 .signature-line {
   height: 1px;
   background: #7d918c;
   margin-bottom: 8px;
+}
+.cert-verification {
+  grid-template-columns: 94px 1fr;
+  align-items: center;
+  text-align: left;
+  gap: 12px !important;
+}
+.certificate-barcode {
+  width: 94px;
+  height: 94px;
+  padding: 5px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.cert-number {
+  display: grid;
+  gap: 5px;
+  overflow-wrap: anywhere;
 }
 .cert-footer small {
   color: var(--muted);
@@ -1774,6 +1846,13 @@ dialog form {
     grid-template-columns: 1fr;
     gap: 28px;
     margin-top: 36px;
+  }
+  .cert-verification {
+    grid-template-columns: 82px 1fr;
+  }
+  .certificate-barcode {
+    width: 82px;
+    height: 82px;
   }
 }
 @media print {
