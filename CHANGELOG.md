@@ -108,3 +108,19 @@
 - Added a distinctive editorial/futuristic visual language with geometric linework, restrained depth, sharper radii, and stronger hierarchy.
 - Restyled public pages, dashboard roles, test engine, forms, certificate, institution profile, and mobile navigation consistently.
 - Preserved accessibility, focus visibility, reduced-motion support, responsive behavior, and print-safe certificates.
+## [6.1.0] — 2026-10-08 — LMS, Placement & Analytics (build 010)
+
+### Added
+- Migrasi `010_lms_placement_itp_analytics.sql`: LMS terstruktur (`modules`, `lessons`, `lesson_progress` + RLS), kolom `profiles.cefr_level`, `programs.audience`/`level_cefr`, `tests.score_format`/`metadata`.
+- Placement Test Diagnostik v1 (24 item orisinal, tiga bagian) dengan pemetaan CEFR server-side (A1–C1, berbobot difficulty).
+- Track TOEFL ITP: program katalog + kerangka `toefl-itp-form-a` (score_format `itp`) dengan estimasi skor 310–677 per bagian.
+- API baru: `GET /api/courses/:slug`, `POST /api/lessons/progress`, `GET /api/analytics/me`.
+- `submitTest` kini menyimpan `sectionBreakdown`, CEFR (placement), dan estimasi ITP di metadata attempt.
+- Dashboard siswa: panel "Analitik Saya" (akurasi per bagian, tren, estimasi internal); kolom Level di Riwayat Hasil.
+- Halaman hasil tes menampilkan breakdown per bagian, level CEFR, dan estimasi ITP.
+- CTA Placement Test pada halaman Tes; entri placement & program ITP di seed.json.
+
+### Notes
+- Estimasi ITP/IELTS bersifat indikator internal untuk arahan belajar, bukan skor resmi.
+- Kerangka `toefl-itp-form-a` berstatus draft; item diisi via admin/questions sebelum dipublikasikan.
+

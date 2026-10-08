@@ -1499,7 +1499,7 @@ async function testPackage(slug, u) {
         status: "eq.published",
         validation_status: "in.(approved,classroom_ready)",
         select:
-          "id,slug,title,test_type,duration_minutes,instructions,version,validation_status",
+          "id,slug,title,test_type,duration_minutes,instructions,version,validation_status,score_format",
         limit: "1",
       },
     }),
@@ -1562,7 +1562,7 @@ async function submitTest(req, u) {
         id: `eq.${id}`,
         user_id: `eq.${u.id}`,
         status: "eq.started",
-        select: "id,test_id,test_slug,started_at",
+        select: "id,test_id,test_slug,started_at,metadata",
         limit: "1",
       },
     }),
@@ -1574,13 +1574,14 @@ async function submitTest(req, u) {
       query: {
         test_id: `eq.${a.test_id}`,
         status: "eq.published",
-        select: "id,item_type,answer_key,rubric",
+        select: "id,section,item_type,answer_key,rubric,difficulty",
         rights_status: "in.(original,licensed,cleared)",
       },
     }),
     answers = b.answers && typeof b.answers === "object" ? b.answers : {};
   let correct = 0,
     total = 0;
+  const bySection = {};
   const rows = [];
   for (const q of qs) {
     const value = answers[q.id] ?? null,
@@ -1593,6 +1594,10 @@ async function submitTest(req, u) {
         : [q.answer_key];
       ok = expected.some((x) => norm(x) === norm(value));
       if (ok) correct++;
+      const sec = q.section || "Umum";
+      bySection[sec] ??= { correct: 0, total: 0 };
+      bySection[sec].total++;
+      if (ok) bySection[sec].correct++;
     }
     rows.push({
       attempt_id: a.id,
@@ -1645,17 +1650,352 @@ async function submitTest(req, u) {
         Math.round((Date.now() - new Date(a.started_at).getTime()) / 1000),
       ),
       objective_score: score,
+      metadata: {
+        ...((a.metadata && typeof a.metadata === "object") || {}),
+        sectionBreakdown: bySection,
+      },
     },
   });
+  const tinfo =
+    (
+      await supabase("/rest/v1/tests", {
+        service: true,
+        query: {
+          id: `eq.${a.test_id}`,
+          select: "test_type,score_format",
+          limit: "1",
+        },
+      })
+    )[0] || {};
+  let cefr = null,
+    itpEstimate = null;
+  if (tinfo.test_type === "placement") {
+    const scored = qs.filter(
+      (q) => q.answer_key !== null && q.answer_key !== undefined,
+    );
+    const wsum = scored.reduce((s, q) => s + Number(q.difficulty || 0.5), 0);
+    const wgot = scored.reduce(
+      (s, q) =>
+        s +
+        (rows.find((r) => r.question_id === q.id)?.is_correct
+          ? Number(q.difficulty || 0.5)
+          : 0),
+      0,
+    );
+    const pct = wsum ? Math.round((wgot / wsum) * 100) : 0;
+    cefr =
+      pct >= 86
+        ? "C1"
+        : pct >= 72
+          ? "B2"
+          : pct >= 58
+            ? "B1+"
+            : pct >= 44
+              ? "B1"
+              : pct >= 30
+                ? "A2"
+                : "A1";
+    await supabase("/rest/v1/attempts", {
+      method: "PATCH",
+      service: true,
+      query: { id: `eq.${a.id}` },
+      body: {
+        metadata: {
+          sectionBreakdown: bySection,
+          cefr,
+          cefrWeightedPercent: pct,
+        },
+      },
+    });
+    await supabase("/rest/v1/profiles", {
+      method: "PATCH",
+      service: true,
+      query: { id: `eq.${u.id}` },
+      body: {
+        cefr_level: cefr,
+        placement_completed_at: new Date().toISOString(),
+      },
+    });
+  }
+  if (tinfo.score_format === "itp") {
+    const pick = (name) => {
+      const key = Object.keys(bySection).find((k) =>
+        k.toLowerCase().includes(name),
+      );
+      return key && bySection[key].total
+        ? Math.round((bySection[key].correct / bySection[key].total) * 100)
+        : null;
+    };
+    const l = pick("listening"),
+      st = pick("structure"),
+      r = pick("reading");
+    if (l !== null && st !== null && r !== null) {
+      const conv = (p, min, max) => Math.round(min + (p / 100) * (max - min));
+      const lS = conv(l, 31, 68),
+        sS = conv(st, 31, 68),
+        rS = conv(r, 31, 67);
+      itpEstimate = 310 + Math.round(((lS + sS + rS - 93) / 111) * 367);
+      await supabase("/rest/v1/attempts", {
+        method: "PATCH",
+        service: true,
+        query: { id: `eq.${a.id}` },
+        body: {
+          metadata: {
+            sectionBreakdown: bySection,
+            itpEstimate: {
+              listening: lS,
+              structure: sS,
+              reading: rS,
+              total: itpEstimate,
+            },
+          },
+        },
+      });
+    }
+  }
   audit(u, "attempt.submit", "attempt", a.id, { score, total });
   return out({
     attemptId: a.id,
     objectiveScore: score,
     correct,
     total,
+    sectionBreakdown: bySection,
+    cefrLevel: cefr,
+    itpEstimate,
     requiresHumanReview: qs.some((q) =>
       ["writing", "speaking"].includes(q.item_type),
     ),
+  });
+}
+
+async function courseOutline(slug, u) {
+  const progs = await supabase("/rest/v1/programs", {
+    service: true,
+    query: {
+      slug: `eq.${clean(slug, 100)}`,
+      select: "id,slug,title,audience,level_cefr",
+      limit: "1",
+    },
+  });
+  const p = progs[0];
+  if (!p) return out({ error: "Program tidak ditemukan." }, 404);
+  const enrolled = (
+    await supabase("/rest/v1/enrollments", {
+      token: u.token,
+      query: {
+        user_id: `eq.${u.id}`,
+        program_id: `eq.${p.id}`,
+        status: "eq.active",
+        select: "id,progress",
+        limit: "1",
+      },
+    })
+  )[0];
+  if (!enrolled && !allow(u, ["admin", "instructor"]))
+    return out({ error: "Anda belum terdaftar pada program ini." }, 403);
+  const mods = await supabase("/rest/v1/modules", {
+    service: true,
+    query: {
+      program_id: `eq.${p.id}`,
+      status: "eq.published",
+      select: "id,title,description,position",
+      order: "position.asc",
+    },
+  });
+  const lessonRows = mods.length
+    ? await supabase("/rest/v1/lessons", {
+        service: true,
+        query: {
+          module_id: `in.(${mods.map((m) => m.id).join(",")})`,
+          status: "eq.published",
+          select:
+            "id,module_id,title,summary,content_type,duration_minutes,position",
+          order: "position.asc",
+        },
+      })
+    : [];
+  const progress = await supabase("/rest/v1/lesson_progress", {
+    token: u.token,
+    query: { user_id: `eq.${u.id}`, select: "lesson_id,status,completed_at" },
+  });
+  const pmap = new Map(progress.map((r) => [r.lesson_id, r]));
+  const outline = mods.map((m) => ({
+    ...m,
+    lessons: lessonRows
+      .filter((l) => l.module_id === m.id)
+      .map((l) => ({ ...l, progress: pmap.get(l.id)?.status || "not_started" })),
+  }));
+  const total = lessonRows.length;
+  const done = lessonRows.filter(
+    (l) => pmap.get(l.id)?.status === "completed",
+  ).length;
+  return out({
+    program: p,
+    modules: outline,
+    progressPercent: total ? Math.round((done / total) * 100) : 0,
+  });
+}
+
+async function lessonProgress(request, u) {
+  const b = await safeJson(request);
+  const lessonId = clean(b.lessonId, 100);
+  const status = b.status === "completed" ? "completed" : "in_progress";
+  if (!lessonId) return out({ error: "lessonId wajib diisi." }, 400);
+  const lesson = (
+    await supabase("/rest/v1/lessons", {
+      service: true,
+      query: {
+        id: `eq.${lessonId}`,
+        status: "eq.published",
+        select: "id,module_id",
+        limit: "1",
+      },
+    })
+  )[0];
+  if (!lesson) return out({ error: "Pelajaran tidak tersedia." }, 404);
+  const programId = (
+    await supabase("/rest/v1/modules", {
+      service: true,
+      query: {
+        id: `eq.${lesson.module_id}`,
+        select: "program_id",
+        limit: "1",
+      },
+    })
+  )[0]?.program_id;
+  const enrolled = (
+    await supabase("/rest/v1/enrollments", {
+      token: u.token,
+      query: {
+        user_id: `eq.${u.id}`,
+        program_id: `eq.${programId}`,
+        status: "eq.active",
+        select: "id",
+        limit: "1",
+      },
+    })
+  )[0];
+  if (!enrolled && !allow(u, ["admin", "instructor"]))
+    return out({ error: "Anda belum terdaftar pada program ini." }, 403);
+  await supabase("/rest/v1/lesson_progress", {
+    method: "POST",
+    token: u.token,
+    body: {
+      user_id: u.id,
+      lesson_id: lessonId,
+      status,
+      completed_at: status === "completed" ? new Date().toISOString() : null,
+    },
+    prefer: "resolution=merge-duplicates",
+  });
+  const mods = await supabase("/rest/v1/modules", {
+    service: true,
+    query: {
+      program_id: `eq.${programId}`,
+      status: "eq.published",
+      select: "id",
+    },
+  });
+  const allLessons = mods.length
+    ? await supabase("/rest/v1/lessons", {
+        service: true,
+        query: {
+          module_id: `in.(${mods.map((m) => m.id).join(",")})`,
+          status: "eq.published",
+          select: "id",
+        },
+      })
+    : [];
+  const doneRows = await supabase("/rest/v1/lesson_progress", {
+    service: true,
+    query: {
+      user_id: `eq.${u.id}`,
+      status: "eq.completed",
+      select: "lesson_id",
+    },
+  });
+  const lessonSet = new Set(allLessons.map((l) => l.id));
+  const done = doneRows.filter((r) => lessonSet.has(r.lesson_id)).length;
+  const pct = allLessons.length
+    ? Math.round((done / allLessons.length) * 100)
+    : 0;
+  if (enrolled)
+    await supabase("/rest/v1/enrollments", {
+      method: "PATCH",
+      service: true,
+      query: { id: `eq.${enrolled.id}` },
+      body: {
+        progress: pct,
+        completed_at: pct >= 100 ? new Date().toISOString() : null,
+      },
+    });
+  audit(u, "lesson.progress", "lesson", lessonId, { status, pct });
+  return out({ ok: true, status, progressPercent: pct });
+}
+
+async function analyticsMe(u) {
+  const attempts = await supabase("/rest/v1/attempts", {
+    token: u.token,
+    query: {
+      user_id: `eq.${u.id}`,
+      status: "in.(submitted,scored)",
+      select: "id,test_slug,objective_score,submitted_at,metadata",
+      order: "submitted_at.desc",
+      limit: "50",
+    },
+  });
+  const ids = attempts.map((a) => a.id);
+  const answers = ids.length
+    ? await supabase("/rest/v1/answers", {
+        token: u.token,
+        query: {
+          attempt_id: `in.(${ids.join(",")})`,
+          is_correct: "not.is.null",
+          select: "attempt_id,is_correct,questions(section)",
+        },
+      })
+    : [];
+  const skill = {};
+  for (const r of answers) {
+    const sec = r.questions?.section || "Umum";
+    skill[sec] ??= { correct: 0, total: 0 };
+    skill[sec].total++;
+    if (r.is_correct) skill[sec].correct++;
+  }
+  const trend = attempts
+    .filter((a) => a.objective_score !== null)
+    .reverse()
+    .map((a) => ({
+      date: a.submitted_at,
+      test: a.test_slug,
+      score: a.objective_score,
+    }));
+  const recent = trend.slice(-3);
+  const avg = recent.length
+    ? Math.round(
+        (recent.reduce((s, t) => s + t.score, 0) / recent.length) * 100,
+      ) / 100
+    : null;
+  return out({
+    attemptsCount: attempts.length,
+    cefrLevel: u.profile?.cefr_level || null,
+    skillAccuracy: Object.fromEntries(
+      Object.entries(skill).map(([k, v]) => [
+        k,
+        v.total ? Math.round((v.correct / v.total) * 100) : null,
+      ]),
+    ),
+    trend,
+    internalEstimate:
+      avg === null
+        ? null
+        : {
+            objectivePercent: avg,
+            itpTotal: 310 + Math.round((avg / 100) * 367),
+            ieltsBand:
+              Math.max(4, Math.min(9, Math.round((4 + (avg / 100) * 5) * 2) / 2)),
+          },
+    note: "Estimasi internal untuk arahan belajar; bukan skor resmi IELTS/TOEFL.",
   });
 }
 
@@ -1913,6 +2253,12 @@ export default async (request) => {
       return materials(request, u);
     if (path === "attendance" && ["GET", "POST"].includes(request.method))
       return attendance(request, u);
+    if (path.startsWith("courses/") && request.method === "GET")
+      return courseOutline(path.split("/")[1], u);
+    if (path === "lessons/progress" && request.method === "POST")
+      return lessonProgress(request, u);
+    if (path === "analytics/me" && request.method === "GET")
+      return analyticsMe(u);
     return out({ error: "Not found" }, 404);
   } catch (e) {
     console.error(e);

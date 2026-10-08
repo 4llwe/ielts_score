@@ -105,7 +105,11 @@
       "price": 150000,
       "oldPrice": null,
       "billingUnit": "mulai per pertemuan",
-      "features": ["Kurikulum personal", "Jadwal fleksibel", "Feedback tutor"]
+      "features": [
+        "Kurikulum personal",
+        "Jadwal fleksibel",
+        "Feedback tutor"
+      ]
     },
     {
       "id": "speakup-academy",
@@ -186,7 +190,10 @@
       "price": null,
       "oldPrice": null,
       "billingUnit": "",
-      "features": ["Speaking, grammar, vocabulary", "Progress report"]
+      "features": [
+        "Speaking, grammar, vocabulary",
+        "Progress report"
+      ]
     },
     {
       "id": "academic-writing",
@@ -250,7 +257,11 @@
       "price": null,
       "oldPrice": null,
       "billingUnit": "",
-      "features": ["Strategi aplikasi", "Review dokumen", "Persiapan wawancara"]
+      "features": [
+        "Strategi aplikasi",
+        "Review dokumen",
+        "Persiapan wawancara"
+      ]
     },
     {
       "id": "campus-application",
@@ -263,15 +274,38 @@
       "price": null,
       "oldPrice": null,
       "billingUnit": "",
-      "features": ["Pemilihan kampus", "Review aplikasi", "Pendampingan proses"]
+      "features": [
+        "Pemilihan kampus",
+        "Review aplikasi",
+        "Pendampingan proses"
+      ]
+    },
+    {
+      "id": "toefl-itp-preparation",
+      "title": "TOEFL ITP Preparation (Exit Test Kampus)",
+      "category": "TOEFL Preparation",
+      "level": "B1 ke atas",
+      "duration": "8 minggu",
+      "meetings": "24 pertemuan × 100 menit",
+      "mode": "Online / Hybrid",
+      "price": 1500000,
+      "billingUnit": "per kelas",
+      "featured": true,
+      "features": [
+        "Listening, Structure & Written Expression, Reading",
+        "Simulasi penuh berformat ITP dengan estimasi skor 310–677",
+        "Analitik akurasi per bagian",
+        "Rekomendasi jalur berdasarkan placement test",
+        "Pendampingan exit test kampus"
+      ]
     }
   ],
   "tests": [
     {
-      "id": "placement",
-      "title": "English Preparation Diagnostic",
-      "minutes": 15,
-      "questions": 15,
+      "id": "placement-diagnostik-v1",
+      "title": "Placement Test Diagnostik (CEFR)",
+      "minutes": 40,
+      "questions": 24,
       "price": 0
     },
     {

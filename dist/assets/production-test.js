@@ -129,8 +129,25 @@ async function submit(e) {
     f.querySelectorAll("input,textarea,button").forEach(
       (x) => (x.disabled = true),
     );
+    const breakdown = Object.entries(r.sectionBreakdown || {})
+      .map(
+        ([k, v]) =>
+          `<tr><td>${esc(k)}</td><td>${v.correct}/${v.total}</td><td>${v.total ? Math.round((v.correct / v.total) * 100) + "%" : "—"}</td></tr>`,
+      )
+      .join("");
+    const extras =
+      (r.cefrLevel
+        ? `<div class="stat"><small>Level CEFR</small><strong>${esc(r.cefrLevel)}</strong><span>Hasil placement test</span></div>`
+        : "") +
+      (r.itpEstimate
+        ? `<div class="stat"><small>Estimasi ITP</small><strong>${r.itpEstimate.total}</strong><span>L ${r.itpEstimate.listening} · S ${r.itpEstimate.structure} · R ${r.itpEstimate.reading}</span></div>`
+        : "");
     $("#serverResult").innerHTML =
-      `<div class="test-result"><strong>${r.objectiveScore == null ? "—" : r.objectiveScore + "%"}</strong><div><h2>Attempt tersimpan</h2><p>${r.total ? `${r.correct} dari ${r.total} item objektif benar.` : "Item memerlukan evaluasi manusia."} ${r.requiresHumanReview ? "Writing/Speaking diteruskan melalui workflow evaluasi." : ""}</p></div></div>`;
+      `<div class="test-result"><strong>${r.objectiveScore == null ? "—" : r.objectiveScore + "%"}</strong><div><h2>Attempt tersimpan</h2><p>${r.total ? `${r.correct} dari ${r.total} item objektif benar.` : "Item memerlukan evaluasi manusia."} ${r.requiresHumanReview ? "Writing/Speaking diteruskan melalui workflow evaluasi." : ""}</p></div></div>` +
+      (extras ? `<div class="stats">${extras}</div>` : "") +
+      (breakdown
+        ? `<div class="panel table-scroll"><table class="table"><thead><tr><th>Bagian</th><th>Benar</th><th>Akurasi</th></tr></thead><tbody>${breakdown}</tbody></table></div><p class="notice">Skor bersifat diagnostik internal, bukan skor resmi.</p>`
+        : "");
   } catch (err) {
     alert(err.message);
     btn.disabled = false;
