@@ -70,7 +70,7 @@ update public.programs set audience='sma' where title ilike '%Smart English%' an
 insert into public.programs(slug,title,description,price,duration_weeks,status,audience,level_cefr) values
 ('toefl-itp-preparation','TOEFL ITP Preparation (Exit Test Kampus)',
  'Persiapan TOEFL ITP untuk syarat kelulusan (exit test) mahasiswa: Listening Comprehension, Structure & Written Expression, dan Reading Comprehension, lengkap dengan simulasi penuh berformat ITP.',1500000,8,'published','mahasiswa','B1')
-on conflict(slug) do update set title=excluded.title,description=excluded.description,price=excluded.price,duration_weeks=excluded.duration_weeks,status='published',audience='mahasiswa',level_cefr='B1',updated_at=now();
+on conflict(slug) do update set title=excluded.title,description=excluded.description,price=excluded.price,duration_weeks=excluded.duration_weeks,status='published',audience='mahasiswa',level_cefr='B1';
 
 insert into public.tests(slug,title,test_type,duration_minutes,price,instructions,status,version,validation_status,validation_notes,score_format) values
 ('toefl-itp-form-a','TOEFL ITP Simulation — Form A','toefl',115,0,
