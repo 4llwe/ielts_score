@@ -122,6 +122,7 @@ const menus = {
     "Ringkasan",
     "Program Saya",
     "Riwayat Hasil",
+    "Analitik Saya",
     "Tugas",
     "Writing & Speaking",
     "Jadwal",
@@ -301,14 +302,43 @@ async function studentPanel(name) {
     return (
       heading("ASSESSMENT", "Riwayat Hasil", "Hanya hasil akun ini.") +
       table(
-        ["Tes", "Tanggal", "Status", "Skor objektif"],
+        ["Tes", "Tanggal", "Status", "Skor objektif", "Level"],
         x
           .map(
             (a) =>
-              `<tr><td><b>${esc(a.metadata?.label || a.test_slug)}</b></td><td>${date(a.submitted_at || a.started_at)}</td><td><span class="status">${esc(a.status)}</span></td><td>${a.objective_score == null ? "—" : Number(a.objective_score) + "%"}</td></tr>`,
+              `<tr><td><b>${esc(a.metadata?.label || a.test_slug)}</b></td><td>${date(a.submitted_at || a.started_at)}</td><td><span class="status">${esc(a.status)}</span></td><td>${a.objective_score == null ? "—" : Number(a.objective_score) + "%"}</td><td>${a.metadata?.cefr ? "CEFR " + esc(a.metadata.cefr) : a.metadata?.itpEstimate ? "ITP ±" + Number(a.metadata.itpEstimate.total) : "—"}</td></tr>`,
           )
           .join(""),
       )
+    );
+  }
+  if (name === "Analitik Saya") {
+    const a = await api("analytics/me");
+    const est = a.internalEstimate;
+    const skillRows = Object.entries(a.skillAccuracy || {})
+      .map(
+        ([k, v]) =>
+          `<tr><td><b>${esc(k)}</b></td><td>${v == null ? "—" : v + "%"}</td></tr>`,
+      )
+      .join("");
+    const trendRows = (a.trend || [])
+      .slice(-8)
+      .reverse()
+      .map(
+        (t) =>
+          `<tr><td>${date(t.date)}</td><td>${esc(t.test)}</td><td>${Number(t.score)}%</td></tr>`,
+      )
+      .join("");
+    return (
+      heading(
+        "ANALYTICS",
+        "Analitik Saya",
+        "Akurasi per bagian, tren skor, dan estimasi internal.",
+      ) +
+      `<div class="stats"><div class="stat"><small>Level CEFR</small><strong>${esc(a.cefrLevel || "—")}</strong><span>Hasil placement</span></div><div class="stat"><small>Estimasi ITP</small><strong>${est ? est.itpTotal : "—"}</strong><span>Indikator internal</span></div><div class="stat"><small>Estimasi IELTS</small><strong>${est ? est.ieltsBand : "—"}</strong><span>Indikator internal</span></div></div>` +
+      table(["Bagian", "Akurasi"], skillRows) +
+      table(["Tanggal", "Tes", "Skor"], trendRows) +
+      `<p class="notice">${esc(a.note || "")}</p>`
     );
   }
   if (name === "Tugas") {
