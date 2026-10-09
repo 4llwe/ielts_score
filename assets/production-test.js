@@ -215,4 +215,5 @@ function $$(s, r = document) {
 }
 window.addEventListener("popstate", renderTest);
 window.addEventListener("load", renderTest);
+window.addEventListener("ielts:navigation", renderTest);
 renderTest();
